@@ -1,0 +1,46 @@
+/* Forms */
+input {
+  width: 100%;
+}
+
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+  margin: 0;
+}
+
+/* All custom class */
+.hide-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+[x-cloak] {
+  display: none !important;
+}
+
+.primary-menu .active {
+  background-color: theme('colors.primary.900');
+}
+.primary-menu .active:hover, .primary-menu .active:focus {
+  background-color: theme('colors.primary.900');
+}
+
+.welcome span {
+  @apply font-medium bg-clip-text text-transparent bg-gradient-to-r from-primary-400 to-primary-800;
+}
+
+.welcome-description span {
+  @apply text-secondary-600 dark:text-white font-medium;
+}
+
+.iti {
+  display: block;
+}
+
+.iti__selected-flag {
+  padding: 0 10px;
+}
