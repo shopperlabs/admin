@@ -15,18 +15,15 @@ use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use Illuminate\Contracts\View\View;
-use Illuminate\Validation\Rule;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Shopper\Components;
 use Shopper\Core\Models\InventoryHistory;
-use Shopper\Core\Traits\Attributes\WithStock;
 
 class Inventory extends Component implements HasForms, HasTable
 {
     use InteractsWithForms;
     use InteractsWithTable;
-    // use WithStock;
 
     public $product;
 
@@ -37,10 +34,6 @@ class Inventory extends Component implements HasForms, HasTable
         $this->product = $product;
 
         $this->form->fill($this->product->toArray());
-        /*$this->inventories = $inventories;
-        $this->inventory = $defaultInventory;
-        $this->stock = $product->stock;
-        $this->realStock = $product->stock;*/
     }
 
     public function form(Form $form): Form
@@ -118,109 +111,93 @@ class Inventory extends Component implements HasForms, HasTable
                     ->color(fn (InventoryHistory $record) => $record->quantity <= 0 ? 'danger' : 'gray')
                     ->alignRight()
                     ->summarize([
-                            Tables\Columns\Summarizers\Sum::make()
-                                ->label(__('shopper::words.total'))
-                                ->numeric(),
-                        ]),
+                        Tables\Columns\Summarizers\Sum::make()
+                            ->label(__('shopper::words.total'))
+                            ->numeric(),
+                    ]),
             ])
             ->emptyStateIcon('untitledui-file-05')
             ->emptyStateDescription(__('shopper::pages/products.inventory.empty'))
             ->headerActions([
-                    Tables\Actions\Action::make('stock')
-                        ->label('Add stock')
-                        ->icon('untitledui-package')
-                        ->modal()
-                        ->color('gray')
-                        ->modalWidth(MaxWidth::ExtraLarge)
-                        ->form([
-                            Forms\Components\Select::make('inventory')
-                                ->label(__('shopper::pages/products.inventory_name'))
-                                ->relationship('inventory', 'name')
-                                ->native(false)
-                                ->required(),
+                Tables\Actions\Action::make('stock')
+                    ->label('Add stock')
+                    ->icon('untitledui-package')
+                    ->modal()
+                    ->color('gray')
+                    ->modalWidth(MaxWidth::ExtraLarge)
+                    ->form([
+                        Forms\Components\Select::make('inventory')
+                            ->label(__('shopper::pages/products.inventory_name'))
+                            ->relationship('inventory', 'name')
+                            ->native(false)
+                            ->required(),
 
-                            Forms\Components\TextInput::make('quantity')
-                                ->label(__('shopper::layout.forms.label.quantity'))
-                                ->placeholder('-10 or -5 or 50, etc')
-                                ->numeric()
-                                ->required(),
-                        ])
-                        ->action(function (array $data): void {
-                            $inventoryId = (int) $data['inventory'];
-                            $quantity = (int) $data['quantity'];
-                            $currentStock = InventoryHistory::query()
-                                ->where('inventory_id', $inventoryId)
-                                ->where('stockable_id', $this->product->id)
-                                ->where('stockable_type', 'product')
-                                ->get()
-                                ->sum('quantity');
+                        Forms\Components\TextInput::make('quantity')
+                            ->label(__('shopper::layout.forms.label.quantity'))
+                            ->placeholder('-10 or -5 or 50, etc')
+                            ->numeric()
+                            ->required(),
+                    ])
+                    ->action(function (array $data): void {
+                        $inventoryId = (int) $data['inventory'];
+                        $quantity = (int) $data['quantity'];
+                        $currentStock = InventoryHistory::query()
+                            ->where('inventory_id', $inventoryId)
+                            ->where('stockable_id', $this->product->id)
+                            ->where('stockable_type', 'product')
+                            ->get()
+                            ->sum('quantity');
 
-                            $realTimeStock = $currentStock + $quantity;
+                        $realTimeStock = $currentStock + $quantity;
 
-                            if ($realTimeStock >= $currentStock) {
-                                $this->product->mutateStock(
-                                    $inventoryId,
-                                    $quantity,
-                                    [
-                                        'event' => __('shopper::pages/products.inventory.add'),
-                                        'old_quantity' => $quantity,
-                                    ]
-                                );
-                            } else {
-                                $this->product->decreaseStock(
-                                    $inventoryId,
-                                    $quantity,
-                                    [
-                                        'event' => __('shopper::pages/products.inventory.remove'),
-                                        'old_quantity' => $quantity,
-                                    ]
-                                );
-                            }
+                        if ($realTimeStock >= $currentStock) {
+                            $this->product->mutateStock(
+                                $inventoryId,
+                                $quantity,
+                                [
+                                    'event' => __('shopper::pages/products.inventory.add'),
+                                    'old_quantity' => $quantity,
+                                ]
+                            );
+                        } else {
+                            $this->product->decreaseStock(
+                                $inventoryId,
+                                $quantity,
+                                [
+                                    'event' => __('shopper::pages/products.inventory.remove'),
+                                    'old_quantity' => $quantity,
+                                ]
+                            );
+                        }
 
-                            Notification::make()
-                                ->title(__('Stock successfully Updated'))
-                                ->success()
-                                ->send();
+                        Notification::make()
+                            ->title(__('Stock successfully Updated'))
+                            ->success()
+                            ->send();
 
-                            $this->dispatch('updateInventory');
-                        }),
+                        $this->dispatch('updateInventory');
+                    }),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('inventory')
-                        ->relationship('inventory', 'name')
-                        ->native(false),
+                    ->relationship('inventory', 'name')
+                    ->native(false),
             ])
             ->groups([
                 Tables\Grouping\Group::make('inventory.name')
-                        ->label(__('shopper::words.location'))
-                        ->collapsible(),
+                    ->label(__('shopper::words.location'))
+                    ->collapsible(),
             ]);
     }
 
     public function store(): void
     {
-        $this->validate([
-            'sku' => [
-                'nullable',
-                Rule::unique(shopper_table('products'), 'sku')->ignore($this->product->id),
-            ],
-            'barcode' => [
-                'nullable',
-                Rule::unique(shopper_table('products'), 'barcode')->ignore($this->product->id),
-            ],
-        ]);
-
         $this->product->update($this->form->getState());
-        $this->product->update([
-            'sku' => $this->sku ?? null,
-            'barcode' => $this->barcode ?? null,
-            'security_stock' => $this->securityStock ?? null,
-        ]);
 
         $this->dispatch('productHasUpdated');
 
         Notification::make()
-            ->body(__('shopper::pages/products.notifications.stock_update'))
+            ->title(__('shopper::pages/products.notifications.stock_update'))
             ->success()
             ->send();
     }
