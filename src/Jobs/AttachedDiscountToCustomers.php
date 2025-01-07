@@ -14,7 +14,7 @@ use Shopper\Core\Models\Discount;
 use Shopper\Core\Models\DiscountDetail;
 use Shopper\Core\Models\User;
 
-class DiscountCustomersJobs implements ShouldQueue
+class AttachedDiscountToCustomers implements ShouldQueue
 {
     use Dispatchable;
     use InteractsWithQueue;

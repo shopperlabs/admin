@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Shopper\Livewire\Pages\Settings\Inventories;
+namespace Shopper\Livewire\Pages\Settings\Locations;
 
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
@@ -18,7 +18,7 @@ class Create extends Component
 
     public function render(): View
     {
-        return view('shopper::livewire.pages.settings.inventories.create')
+        return view('shopper::livewire.pages.settings.locations.create')
             ->title(__('shopper::pages/settings/global.location.add'));
     }
 }

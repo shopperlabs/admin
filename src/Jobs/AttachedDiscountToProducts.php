@@ -13,7 +13,7 @@ use Shopper\Core\Enum\DiscountApplyTo;
 use Shopper\Core\Models\Discount;
 use Shopper\Core\Models\DiscountDetail;
 
-class DiscountProductsJob implements ShouldQueue
+class AttachedDiscountToProducts implements ShouldQueue
 {
     use Dispatchable;
     use InteractsWithQueue;

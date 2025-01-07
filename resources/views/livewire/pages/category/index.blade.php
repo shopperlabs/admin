@@ -3,22 +3,16 @@
 @endphp
 
 <x-shopper::container class="py-5">
-    <x-shopper::heading>
-        <x-slot name="title">
-            {{ __('shopper::pages/categories.menu') }}
-        </x-slot>
-
+    <x-shopper::heading :title="__('shopper::pages/categories.menu')">
         <x-slot name="action">
             @if ($total > 0)
                 @can('add_categories')
-                    <div class="flex space-x-3">
-                        <x-shopper::buttons.primary
-                            wire:click="$dispatch('openPanel', { component: 'shopper-slide-overs.category-form' })"
-                            type="button"
-                        >
-                            {{ __('shopper::forms.actions.add_label', ['label' => __('shopper::pages/categories.single')]) }}
-                        </x-shopper::buttons.primary>
-                    </div>
+                    <x-shopper::buttons.primary
+                        wire:click="$dispatch('openPanel', { component: 'shopper-slide-overs.category-form' })"
+                        type="button"
+                    >
+                        {{ __('shopper::forms.actions.add_label', ['label' => __('shopper::pages/categories.single')]) }}
+                    </x-shopper::buttons.primary>
                 @endcan
             @endif
         </x-slot>

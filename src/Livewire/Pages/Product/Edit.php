@@ -12,6 +12,8 @@ use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\On;
+use Livewire\Attributes\Url;
+use Shopper\Core\Events\Products\Deleted;
 use Shopper\Core\Repositories\ProductRepository;
 use Shopper\Livewire\Pages\AbstractPageComponent;
 
@@ -22,11 +24,14 @@ class Edit extends AbstractPageComponent implements HasActions, HasForms
 
     public $product;
 
+    #[Url(as: 'tab')]
+    public string $activeTab = 'detail';
+
     public function mount(): void
     {
         $this->authorize('edit_products');
 
-        $this->product = (new ProductRepository)->getById((int) $this->product);
+        $this->product = (new ProductRepository)->with('prices')->getById((int) $this->product);
     }
 
     public function deleteAction(): Action
@@ -35,9 +40,12 @@ class Edit extends AbstractPageComponent implements HasActions, HasForms
             ->requiresConfirmation()
             ->icon('untitledui-trash-03')
             ->modalIcon('untitledui-trash-03')
+            ->authorize('delete_products', $this->product)
             ->color('danger')
             ->button()
             ->action(function (): void {
+                event(new Deleted($this->product));
+
                 $this->product->delete();
 
                 Notification::make()
@@ -49,7 +57,7 @@ class Edit extends AbstractPageComponent implements HasActions, HasForms
             });
     }
 
-    #[On('productHasUpdated')]
+    #[On('product.updated')]
     public function render(): View
     {
         return view('shopper::livewire.pages.products.edit')

@@ -24,10 +24,8 @@ class Shipping extends Component implements HasForms
 
     public ?array $data = [];
 
-    public function mount($product): void
+    public function mount(): void
     {
-        $this->product = $product;
-
         $this->form->fill($this->product->toArray());
     }
 
@@ -40,10 +38,6 @@ class Shipping extends Component implements HasForms
                     ->aside()
                     ->compact()
                     ->schema([
-                        Forms\Components\Checkbox::make('backorder')
-                            ->label(__('shopper::pages/products.product_can_returned'))
-                            ->helperText(__('shopper::pages/products.product_can_returned_help_text')),
-
                         Forms\Components\Checkbox::make('require_shipping')
                             ->label(__('shopper::pages/products.product_shipped'))
                             ->helperText(__('shopper::pages/products.product_shipped_help_text'))
@@ -74,7 +68,7 @@ class Shipping extends Component implements HasForms
     {
         $this->product->update($this->form->getState());
 
-        $this->dispatch('productHasUpdated');
+        $this->dispatch('product.updated');
 
         Notification::make()
             ->body(__('shopper::pages/products.notifications.shipping_update'))

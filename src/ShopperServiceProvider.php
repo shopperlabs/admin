@@ -10,7 +10,6 @@ use Filament\Support\Colors\Color;
 use Filament\Support\Facades\FilamentColor;
 use Filament\Tables\Columns\Column;
 use Filament\Tables\Columns\TextColumn;
-use Illuminate\Database\Eloquent\Relations\Relation;
 use Livewire\Livewire;
 use PragmaRX\Google2FA\Google2FA;
 use Shopper\Contracts\FailedTwoFactorLoginResponse as FailedTwoFactorLoginResponseContract;
@@ -74,8 +73,6 @@ final class ShopperServiceProvider extends PackageServiceProvider
     public function packageBooted(): void
     {
         $this->bootLivewireComponents();
-
-        $this->bootModelRelationName();
 
         FilamentColor::register([
             'primary' => config('shopper.admin.filament_color'),
@@ -142,17 +139,6 @@ final class ShopperServiceProvider extends PackageServiceProvider
 
             return $this; // @phpstan-ignore-line
         });
-    }
-
-    protected function bootModelRelationName(): void
-    {
-        Relation::morphMap([
-            'brand' => config('shopper.models.brand'),
-            'category' => config('shopper.models.category'),
-            'collection' => config('shopper.models.collection'),
-            'product' => config('shopper.models.product'),
-            'channel' => config('shopper.models.channel'),
-        ]);
     }
 
     protected function bootLivewireComponents(): void

@@ -10,16 +10,12 @@
         />
     </x-shopper::breadcrumb>
 
-    <x-shopper::heading class="my-6">
-        <x-slot name="title">
-            {{ __('shopper::pages/settings/global.location.menu') }}
-        </x-slot>
-
+    <x-shopper::heading class="my-6" :title="__('shopper::pages/settings/global.location.menu')">
         <x-slot name="action">
             @can('add_inventories')
                 @if ($inventories->count() < (int) config('shopper.admin.inventory_limit') + 1)
                     <div class="flex">
-                        <x-shopper::buttons.primary :link="route('shopper.settings.inventories.create')">
+                        <x-shopper::buttons.primary :link="route('shopper.settings.locations.create')">
                             {{ __('shopper::forms.actions.add_label', ['label' => __('shopper::pages/settings/global.location.single')]) }}
                         </x-shopper::buttons.primary>
                     </div>
@@ -107,7 +103,7 @@
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <x-shopper::link
-                                        href="{{ route('shopper.settings.inventories.edit', $inventory) }}"
+                                        :href="route('shopper.settings.locations.edit', $inventory)"
                                         class="inline-flex size-10 items-center justify-center rounded-full hover:bg-gray-50 dark:hover:bg-gray-900/20"
                                     >
                                         <x-untitledui-edit-03

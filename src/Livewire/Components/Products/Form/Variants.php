@@ -15,12 +15,11 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\HtmlString;
-use Livewire\Attributes\On;
+use Livewire\Attributes\Lazy;
 use Livewire\Component;
-use Shopper\Core\Events\Products\Deleted as ProductDeleted;
-use Shopper\Core\Models\Product;
-use Shopper\Core\Repositories\ProductRepository;
+use Shopper\Core\Repositories\VariantRepository;
 
+#[Lazy]
 class Variants extends Component implements HasForms, HasTable
 {
     use InteractsWithForms;
@@ -28,25 +27,25 @@ class Variants extends Component implements HasForms, HasTable
 
     public $product;
 
-    public function mount($product): void
+    public function placeholder(): View
     {
-        $this->product = $product;
+        return view('shopper::components.skeleton.products.section');
     }
 
     public function table(Table $table): Table
     {
         return $table
             ->query(
-                (new ProductRepository)
+                (new VariantRepository)
                     ->query()
-                    ->where('parent_id', $this->product->id)
-                    ->newQuery()
+                    ->where('product_id', $this->product->id)
+                    ->latest()
             )
             ->columns([
                 Tables\Columns\SpatieMediaLibraryImageColumn::make('thumbnail')
                     ->collection(config('shopper.media.storage.thumbnail_collection'))
                     ->label(__('shopper::forms.label.thumbnail'))
-                    ->circular(),
+                    ->square(),
                 Tables\Columns\TextColumn::make('name')
                     ->label(__('shopper::forms.label.name'))
                     ->searchable()
@@ -55,51 +54,58 @@ class Variants extends Component implements HasForms, HasTable
                     ->label(__('shopper::layout.tables.sku'))
                     ->searchable()
                     ->sortable(),
+                Tables\Columns\TextColumn::make('position')
+                    ->label(__('shopper::forms.label.position'))
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('stock')
                     ->label(__('shopper::layout.tables.current_stock'))
                     ->formatStateUsing(
-                        fn (Product $record): HtmlString => new HtmlString(Blade::render(<<<BLADE
+                        fn ($record): HtmlString => new HtmlString(Blade::render(<<<BLADE
                             <div class="flex items-center">
                                 <x-shopper::stock-badge :stock="{$record->stock}" />
                                 {{ __('shopper::words.in_stock') }}
                             </div>
                         BLADE))
                     ),
-                Tables\Columns\TextColumn::make('price_amount')
-                    ->label(__('shopper::forms.label.price'))
-                    ->money(shopper_currency())
-                    ->sortable(),
+            ])
+            ->headerActions([
+                Tables\Actions\Action::make('generate')
+                    ->icon($this->product->type->getIcon())
+                    ->label(__('shopper::pages/products.variants.generate'))
+                    ->color('gray')
+                    ->action(
+                        fn () => $this->dispatch(
+                            'openPanel',
+                            component: 'shopper-slide-overs.generate-variants',
+                            arguments: ['productId' => $this->product->id]
+                        )
+                    )
+                    ->visible($this->product->options->count() > 0),
+                Tables\Actions\Action::make('add')
+                    ->label(__('shopper::pages/products.variants.add'))
+                    ->action(
+                        fn () => $this->dispatch(
+                            'openPanel',
+                            component: 'shopper-slide-overs.add-variant',
+                            arguments: ['productId' => $this->product->id]
+                        )
+                    ),
             ])
             ->actions([
-                Tables\Actions\ActionGroup::make([
-                    Tables\Actions\Action::make('edit')
-                        ->label(__('shopper::forms.actions.edit'))
-                        ->icon('untitledui-edit-04')
-                        ->url(
-                            fn (Product $record): string => route(
-                                name: 'shopper.products.variant',
-                                parameters: ['variantId' => $record->id, 'product' => $this->product]
-                            ),
+                Tables\Actions\Action::make('edit')
+                    ->label(__('shopper::forms.actions.edit'))
+                    ->icon('untitledui-edit-04')
+                    ->action(
+                        fn ($record) => $this->redirectRoute(
+                            name: 'shopper.products.variant',
+                            parameters: ['productId' => $this->product->id, 'variantId' => $record->id],
+                            navigate: true
                         ),
-                    Tables\Actions\Action::make(__('shopper::forms.actions.delete'))
-                        ->icon('untitledui-trash-03')
-                        ->color('danger')
-                        ->requiresConfirmation()
-                        ->modalIcon('untitledui-trash-03')
-                        ->action(function (Product $record): void {
-                            event(new ProductDeleted($record));
-
-                            $record->forceDelete();
-
-                            $this->dispatch('onVariantsUpdated');
-
-                            Notification::make()
-                                ->title(__('shopper::pages/products.notifications.variation_delete'))
-                                ->success()
-                                ->send();
-                        }),
-                ])
-                    ->tooltip('Actions'),
+                    ),
+                Tables\Actions\DeleteAction::make()
+                    ->icon('untitledui-trash-03')
+                    ->modalIcon('untitledui-trash-03')
+                    ->successNotificationTitle(__('shopper::pages/products.notifications.variation_delete')),
             ])
             ->groupedBulkActions([
                 Tables\Actions\DeleteBulkAction::make()
@@ -120,22 +126,10 @@ class Variants extends Component implements HasForms, HasTable
                     })
                     ->deselectRecordsAfterCompletion(),
             ])
-            ->headerActions([
-                Tables\Actions\Action::make('add')
-                    ->label(__('shopper::pages/products.variants.add'))
-                    ->action(
-                        fn () => $this->dispatch(
-                            'openPanel',
-                            component: 'shopper-slide-overs.add-variant',
-                            arguments: ['productId' => $this->product->id]
-                        )
-                    ),
-            ])
             ->emptyStateHeading(__('shopper::pages/products.variants.empty'))
             ->emptyStateIcon('untitledui-book-open');
     }
 
-    #[On('onVariantsUpdated')]
     public function render(): View
     {
         return view('shopper::livewire.components.products.forms.variants');

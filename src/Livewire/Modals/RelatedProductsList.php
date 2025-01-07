@@ -39,16 +39,15 @@ class RelatedProductsList extends ModalComponent
                 operator: 'like',
                 value: '%' . $this->search . '%'
             )
-            ->get(['name', 'price_amount', 'id'])
+            ->get(['name', 'id'])
             ->except($this->exceptProductIds);
     }
 
     public function addSelectedProducts(): void
     {
         $currentProducts = $this->product->relatedProducts->pluck('id')->toArray();
-        $this->product->relatedProducts()->sync(array_merge($this->selectedProducts, $currentProducts));
 
-        $this->dispatch('productHasUpdated');
+        $this->product->relatedProducts()->sync(array_merge($this->selectedProducts, $currentProducts));
 
         Notification::make()
             ->title(__('shopper::layout.status.added'))
@@ -56,7 +55,10 @@ class RelatedProductsList extends ModalComponent
             ->success()
             ->send();
 
-        $this->closeModal();
+        $this->redirect(
+            route('shopper.products.edit', ['product' => $this->product, 'tab' => 'related']),
+            navigate: true
+        );
     }
 
     public function render(): View

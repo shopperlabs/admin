@@ -11,7 +11,9 @@ return [
     'about_pricing' => 'About pricing display',
     'about_pricing_content' => 'All prices are in cents by default. To save 10€ (or 10$) you must enter 1000 cents for the currency formatting to be correct.',
 
-    'cost_per_items_help_text' => 'Customers won’t see this.',
+    'amount_price_help_text' => 'Purchase price, before discounts.',
+    'compare_price_help_text' => 'Recommended sell price, for comparison with purchase price. This price is more often higher',
+    'cost_per_items_help_text' => 'The original manufacturing price. Customers won\'t see it',
     'safety_security_help_text' => 'The safety stock is the limit stock for your products which alerts you if the product stock will soon be out of stock.',
     'quantity_inventory' => 'Quantity Inventory',
     'manage_inventories' => 'Manage Inventories',
@@ -20,20 +22,27 @@ return [
     'product_can_returned_help_text' => 'Users have the option of returning this product if there is a problem or dissatisfaction.',
     'product_shipped' => 'This product will be shipped',
     'product_shipped_help_text' => 'Reassure to fill in the information concerning the shipment of the product.',
-    'status' => 'Product status',
+    'general' => 'Product information',
+    'status' => 'Product availability',
     'visible_help_text' => 'This product will be hidden from all sales channels.',
     'availability_description' => 'Specify a publication date so that your product are scheduled on your store.',
+    'type' => 'Product type',
+    'product_type' => 'Set as default product type',
+    'product_type_helpText' => 'This configuration will be saved for the next products you create.',
     'product_associations' => 'Associations',
     'related_products' => 'Related Products',
     'quantity_available' => 'Quantity Available',
     'current_qty_inventory' => 'Current quantity on this inventory',
     'stock_inventory_heading' => 'Stock & Inventory',
     'stock_inventory_description' => 'Configure the inventory and stock for this :item',
+    'files_helpText' => 'Add the files that will be downloadable with the purchase of this product.',
     'images_helpText' => 'Add images to your product.',
     'variant_images_helpText' => 'Add images to your variant.',
     'thumbnail_helpText' => 'Used to represent your product during checkout, social sharing and more.',
     'weight_dimension' => 'Weight and Dimension',
     'weight_dimension_help_text' => 'Used to calculate shipping charges during checkout and to label prices during order processing.',
+    'external_id_description' => 'The original identifier of your product from the external supplier',
+    'allow_backorder' => 'Allow backorder',
 
     'modals' => [
         'title' => 'Delete this :item',
@@ -42,6 +51,11 @@ return [
         'variants' => [
             'title' => 'Stock management for this variant',
             'select' => 'Select inventory',
+            'add' => 'Add new variant',
+            'options' => [
+                'title' => 'Variant attributes',
+                'description' => 'Select attribute options for this variant.',
+            ],
         ],
     ],
 
@@ -51,16 +65,13 @@ return [
         'title' => 'Products variations',
         'description' => 'All variations of your product. The variations can each have their stock and price.',
         'add' => 'Add variant',
+        'generate' => 'Generate variants',
+        'generate_description' => 'Your products are generated according to the attributes you have selected',
         'variant_title' => 'Variants ~ :name',
         'empty' => 'No variant found',
         'search_label' => 'Search variant',
         'search_placeholder' => 'Search product variant',
         'variant_information' => 'Variant information',
-
-        'modal' => [
-            'title' => 'About the variation',
-            'description' => 'Variant name and price. If the price is empty, the price of the product will be applied.',
-        ],
     ],
 
     'reviews' => [
@@ -91,7 +102,7 @@ return [
     'attributes' => [
         'title' => 'Product Attributes',
         'description' => 'All the attributes associated with this product.',
-        'add' => 'Add attribute',
+        'choose' => 'Choose attributes',
         'empty_title' => 'No enabled Attributes',
         'empty_values' => 'The attributes associated with this product are listed here.',
 
@@ -101,7 +112,7 @@ return [
             'delete_value' => 'Attribute value removed',
             'delete_value_message' => 'You have successfully removed the value of this attribute!',
             'added' => 'Attribute Added',
-            'added_message' => 'You have successfully added an attribute to this product!',
+            'added_message' => 'You have successfully added attributes to this product!',
         ],
     ],
 
@@ -140,16 +151,27 @@ return [
     ],
 
     'notifications' => [
+        'files_update' => 'Product files updated!',
         'media_update' => 'Product media updated!',
         'replicated' => 'Product replicated!',
         'stock_update' => 'Product Stock successfully updated!',
         'seo_update' => 'Product SEO successfully updated!',
         'shipping_update' => 'Product shipping successfully updated!',
-        'variation_create' => 'Product variation successfully added!',
-        'variation_delete' => 'The variation has successfully removed!',
+        'variation_generate' => 'Product Variants successfully saved',
+        'variation_create' => 'Product variant successfully added!',
+        'variation_delete' => 'The variant has successfully removed!',
         'variation_update' => 'Variant successfully updated!',
         'related_added' => 'The product has successfully added to the related products!',
         'remove_related' => 'The product has successfully removed from the related products!',
+        'manage_pricing' => 'Your product pricing has been updated!',
+        'variant_already_exists' => 'This variant already exists!',
+    ],
+
+    'pricing' => [
+        'title' => 'Product pricing',
+        'description' => 'The different prices associated with your product. This depends on the currencies you have in your store.',
+        'add' => 'Add new price',
+        'empty' => 'No product pricing added',
     ],
 
 ];

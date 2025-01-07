@@ -1,22 +1,14 @@
 <x-shopper::container class="py-5">
-    <x-shopper::heading>
-        <x-slot name="title">
-            {{ __('shopper::pages/brands.menu') }}
-        </x-slot>
-
+    <x-shopper::heading :title="__('shopper::pages/brands.menu')">
         <x-slot name="action">
             @if ($total > 0)
                 @can('add_brands')
-                    <div class="flex">
-                        <span class="rounded-md shadow-sm">
-                            <x-shopper::buttons.primary
-                                wire:click="$dispatch('openPanel', { component: 'shopper-slide-overs.brand-form' })"
-                                type="button"
-                            >
-                                {{ __('shopper::forms.actions.add_label', ['label' => __('shopper::pages/brands.single')]) }}
-                            </x-shopper::buttons.primary>
-                        </span>
-                    </div>
+                    <x-shopper::buttons.primary
+                        wire:click="$dispatch('openPanel', { component: 'shopper-slide-overs.brand-form' })"
+                        type="button"
+                    >
+                        {{ __('shopper::forms.actions.add_label', ['label' => __('shopper::pages/brands.single')]) }}
+                    </x-shopper::buttons.primary>
                 @endcan
             @endif
         </x-slot>

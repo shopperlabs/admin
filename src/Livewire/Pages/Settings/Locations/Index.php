@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Shopper\Livewire\Pages\Settings\Inventories;
+namespace Shopper\Livewire\Pages\Settings\Locations;
 
 use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
@@ -16,7 +16,7 @@ use Livewire\Component;
 use Shopper\Core\Models\Inventory;
 
 #[Layout('shopper::components.layouts.setting')]
-class Browse extends Component implements HasActions, HasForms
+class Index extends Component implements HasActions, HasForms
 {
     use InteractsWithActions;
     use InteractsWithForms;
@@ -53,7 +53,7 @@ class Browse extends Component implements HasActions, HasForms
 
     public function render(): View
     {
-        return view('shopper::livewire.pages.settings.inventories.browse', [
+        return view('shopper::livewire.pages.settings.locations.index', [
             'inventories' => Inventory::query()
                 ->with('country')
                 ->limit(config('shopper.admin.inventory_limit'))

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Shopper\Livewire\Components\Settings\Inventories;
+namespace Shopper\Livewire\Components\Settings\Locations;
 
 use Filament\Forms;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -92,11 +92,11 @@ class InventoryForm extends Component implements HasForms
             ->success()
             ->send();
 
-        $this->redirectRoute(name: 'shopper.settings.inventories', navigate: true);
+        $this->redirectRoute(name: 'shopper.settings.locations', navigate: true);
     }
 
     public function render(): View
     {
-        return view('shopper::livewire.components.settings.inventories._form');
+        return view('shopper::livewire.components.settings.locations._form');
     }
 }
