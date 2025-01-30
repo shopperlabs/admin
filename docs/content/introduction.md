@@ -3,7 +3,7 @@
 Shopper is a Headless CMS how provide a range collection of modular tools and components designed to help developers
 create unique and powerful e-commerce experiences.
 
-<img src="https://github.com/shopperlabs/art/blob/main/socialcard.png" alt="Shopper Global Set Example">
+<img src="/img/socialcard.png" alt="Shopper">
 
 Built on the flexibility of Laravel, Shopper provides the essential building blocks for crafting custom online stores.
 Developers have full control over their tech stack and the logic behind every feature, enabling them to tailor the platform
