@@ -16,6 +16,7 @@ use Livewire\Component;
 use Shopper\Actions\Store\Product\DetachAttributesToProductAction;
 use Shopper\Components\Tables\IconColumn;
 use Shopper\Core\Models\AttributeProduct;
+use Shopper\Core\Models\Product;
 
 #[Lazy]
 class Attributes extends Component implements HasForms, HasTable
@@ -23,6 +24,7 @@ class Attributes extends Component implements HasForms, HasTable
     use InteractsWithForms;
     use InteractsWithTable;
 
+    /** @var Product */
     public $product;
 
     public function placeholder(): View
@@ -52,7 +54,7 @@ class Attributes extends Component implements HasForms, HasTable
             ])
             ->groups([
                 Tables\Grouping\Group::make('attribute_id')
-                    ->label(__('shopper::forms.label.attribute'))
+                    ->label(__('shopper::forms.label.attribute')) // @phpstan-ignore-line
                     ->getTitleFromRecordUsing(fn ($record): string => $record->attribute->name),
             ])
             ->defaultGroup('attribute_id')
