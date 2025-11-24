@@ -9,26 +9,45 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
+use Shopper\Core\Models\Product;
 use Shopper\Core\Repositories\ProductRepository;
 use Shopper\Livewire\Components\ModalComponent;
 
+/**
+ * @property-read Collection<int, Product> $products
+ */
 class RelatedProductsList extends ModalComponent
 {
+    /**
+     * @var Product
+     */
     public $product;
 
     public string $search = '';
 
+    /** @var array<int> */
     #[Locked]
     public array $exceptProductIds = [];
 
+    /** @var array<int> */
     public array $selectedProducts = [];
 
+    /**
+     * @param  array<int>  $ids
+     */
     public function mount(int $productId, array $ids = []): void
     {
-        $this->product = (new ProductRepository)->getById($productId);
+        /** @var Product $product */
+        $product = (new ProductRepository)->getById($productId);
+        $this->product = $product;
         $this->exceptProductIds = $ids;
     }
 
+    /**
+     * @return Collection<int, Product>
+     *
+     * @throws \Shopper\Core\Exceptions\ModelRepositoryException
+     */
     #[Computed]
     public function products(): Collection
     {
@@ -37,7 +56,7 @@ class RelatedProductsList extends ModalComponent
             ->where(
                 column: 'name',
                 operator: 'like',
-                value: '%' . $this->search . '%'
+                value: '%'.$this->search.'%'
             )
             ->get(['name', 'id'])
             ->except($this->exceptProductIds);
@@ -45,6 +64,7 @@ class RelatedProductsList extends ModalComponent
 
     public function addSelectedProducts(): void
     {
+        /** @var array<int> $currentProducts */
         $currentProducts = $this->product->relatedProducts->pluck('id')->toArray();
 
         $this->product->relatedProducts()->sync(array_merge($this->selectedProducts, $currentProducts));

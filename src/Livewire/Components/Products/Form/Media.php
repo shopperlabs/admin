@@ -11,18 +11,24 @@ use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Illuminate\Contracts\View\View;
 use Livewire\Component;
+use Shopper\Core\Models\Product;
 
 /**
- * @property Forms\Form $form
+ * @property Form $form
  */
 class Media extends Component implements HasForms
 {
     use InteractsWithForms;
 
+    /** @var Product */
     public $product;
 
+    /** @var array<string, mixed>|null */
     public ?array $data = [];
 
+    /**
+     * @param  Product  $product
+     */
     public function mount($product): void
     {
         $this->product = $product;

@@ -21,6 +21,9 @@ class TwoFactorLoginRequest extends FormRequest
         return true;
     }
 
+    /**
+     * @return string[]
+     */
     public function rules(): array
     {
         return [
@@ -44,7 +47,7 @@ class TwoFactorLoginRequest extends FormRequest
         }
 
         return collect($this->challengedUser()->recoveryCodes())
-            ->first(fn ($code) => hash_equals($this->recovery_code, $code) ? $code : null);
+            ->first(fn ($code): mixed => hash_equals($this->recovery_code, $code) ? $code : null);
     }
 
     public function hasChallengedUser(): bool

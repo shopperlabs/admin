@@ -15,6 +15,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Shopper\Core\Models\Role;
+use Shopper\Core\Models\User;
 use Shopper\Core\Repositories\UserRepository;
 
 #[Layout('shopper::components.layouts.setting')]
@@ -26,20 +27,15 @@ class Index extends Component implements HasForms, HasTable
     public function table(Table $table): Table
     {
         return $table
-            ->query(
-                (new UserRepository)
-                    ->with('roles')
-                    ->query()
-                    ->scopes('administrators')
-            )
+            ->query((new UserRepository)->with('roles')->query()->scopes('administrators'))
             ->columns([
                 Tables\Columns\ViewColumn::make('full_name')
                     ->label(__('shopper::forms.label.full_name'))
                     ->view('shopper::livewire.tables.cells.administrators.name'),
                 Tables\Columns\TextColumn::make('email')
                     ->label(__('shopper::forms.label.email'))
-                    ->icon(fn ($record): string => $record->email_verified_at ? 'untitledui-check-verified-02' : 'untitledui-alert-circle')
-                    ->iconColor(fn ($record): string => $record->email_verified_at ? 'success' : 'danger'),
+                    ->icon(fn (User $record): string => $record->email_verified_at ? 'untitledui-check-verified-02' : 'untitledui-alert-circle')
+                    ->iconColor(fn (User $record): string => $record->email_verified_at ? 'success' : 'danger'),
                 Tables\Columns\TextColumn::make('roles_label')
                     ->label(__('shopper::forms.label.role'))
                     ->badge(),
@@ -47,7 +43,7 @@ class Index extends Component implements HasForms, HasTable
                     ->label(__('shopper::forms.label.access'))
                     ->color('gray')
                     ->formatStateUsing(
-                        fn ($record) => $record->hasRole(config('shopper.core.roles.admin'))
+                        fn (User $record): string|array|null => $record->hasRole(config('shopper.core.roles.admin'))
                         ? __('shopper::words.full')
                         : __('shopper::words.limited')
                     ),
@@ -55,7 +51,7 @@ class Index extends Component implements HasForms, HasTable
             ->actions([
                 Tables\Actions\DeleteAction::make('delete')
                     ->label(__('shopper::forms.actions.delete'))
-                    ->visible(fn ($record) => shopper()->auth()->user()->isAdmin() && ! $record->isAdmin()) // @phpstan-ignore-line
+                    ->visible(fn (User $record): bool => shopper()->auth()->user()->isAdmin() && ! $record->isAdmin()) // @phpstan-ignore-line
                     ->successNotificationTitle(__('shopper::notifications.users_roles.admin_deleted')),
             ]);
     }

@@ -31,9 +31,15 @@ class ChooseProductAttributes extends SlideOverComponent implements HasForms
 {
     use InteractsWithForms;
 
+    /** @var array<string, mixed>|null */
     public ?array $data = [];
 
-    public $productId;
+    public int $productId;
+
+    public static function panelMaxWidth(): string
+    {
+        return '4xl';
+    }
 
     public function mount(): void
     {
@@ -75,7 +81,7 @@ class ChooseProductAttributes extends SlideOverComponent implements HasForms
                                 ->columns(3)
                                 ->live()
                                 ->afterStateUpdated(
-                                    fn (RadioDeck $component) => $component->getContainer()
+                                    fn (RadioDeck $component): Forms\ComponentContainer => $component->getContainer()
                                         ->getParentComponent()
                                         ->getContainer()
                                         ->getComponent('values')
@@ -102,7 +108,7 @@ class ChooseProductAttributes extends SlideOverComponent implements HasForms
                                         ->where('product_id', $this->productId)
                                         ->whereIn('attribute_id', $get('attributes'))
                                         ->get()
-                                        ->mapToGroups(fn (AttributeProduct $attributeProduct) => [
+                                        ->mapToGroups(fn (AttributeProduct $attributeProduct): array => [
                                             $attributeProduct->attribute_id => $attributeProduct->attribute_value_id,
                                         ]);
 
@@ -187,11 +193,6 @@ class ChooseProductAttributes extends SlideOverComponent implements HasForms
             route('shopper.products.edit', ['product' => $this->productId, 'tab' => 'attributes']),
             navigate: true
         );
-    }
-
-    public static function panelMaxWidth(): string
-    {
-        return '4xl';
     }
 
     public function render(): View

@@ -21,7 +21,7 @@ use Shopper\Core\Models\Product;
 use Shopper\Feature;
 
 /**
- * @property Forms\Form $form
+ * @property Form $form
  */
 class Edit extends Component implements HasForms
 {
@@ -33,10 +33,13 @@ class Edit extends Component implements HasForms
     public $product;
 
     /**
-     * @var array<array-key, mixed>|null
+     * @var array<string, mixed>|null
      */
     public ?array $data = [];
 
+    /**
+     * @param  Product  $product
+     */
     public function mount($product): void
     {
         $this->product = $product;
@@ -60,8 +63,10 @@ class Edit extends Component implements HasForms
                                     ->required()
                                     ->maxLength(255)
                                     ->live(onBlur: true)
-                                    ->afterStateUpdated(function ($state, Forms\Set $set): void {
-                                        $set('slug', Str::slug($state));
+                                    ->afterStateUpdated(function (?string $state, Forms\Set $set): void {
+                                        if ($state) {
+                                            $set('slug', Str::slug($state));
+                                        }
                                     }),
                                 Forms\Components\TextInput::make('slug')
                                     ->label(__('shopper::forms.label.slug'))
@@ -76,7 +81,6 @@ class Edit extends Component implements HasForms
                                 Forms\Components\RichEditor::make('description')
                                     ->label(__('shopper::forms.label.description'))
                                     ->columnSpan('full'),
-
                                 Forms\Components\Group::make()
                                     ->schema([
                                         Components\Separator::make()
@@ -93,7 +97,6 @@ class Edit extends Component implements HasForms
                             ->columns(),
                     ])
                     ->columnSpan(['lg' => 2]),
-
                 Forms\Components\Group::make()
                     ->schema([
                         Forms\Components\Section::make(__('shopper::pages/products.status'))
@@ -103,14 +106,12 @@ class Edit extends Component implements HasForms
                                     ->helperText(__('shopper::pages/products.visible_help_text'))
                                     ->onColor('success')
                                     ->default(true),
-
                                 Forms\Components\DateTimePicker::make('published_at')
                                     ->label(__('shopper::forms.label.availability'))
                                     ->native(false)
                                     ->helperText(__('shopper::pages/products.availability_description'))
                                     ->required(),
                             ]),
-
                         Forms\Components\Section::make(__('shopper::pages/products.product_associations'))
                             ->schema([
                                 Forms\Components\Select::make('brand_id')
@@ -118,7 +119,6 @@ class Edit extends Component implements HasForms
                                     ->relationship('brand', 'name', fn (Builder $query) => $query->where('is_enabled', true))
                                     ->searchable()
                                     ->visible(Feature::enabled('brand')),
-
                                 SelectTree::make('categories')
                                     ->label(__('shopper::pages/categories.menu'))
                                     ->enableBranchNode()
@@ -131,7 +131,6 @@ class Edit extends Component implements HasForms
                                     ->searchable()
                                     ->visible(Feature::enabled('category'))
                                     ->withCount(),
-
                                 Forms\Components\Select::make('channels')
                                     ->label(__('shopper::pages/settings/menu.sales'))
                                     ->relationship(
@@ -142,7 +141,6 @@ class Edit extends Component implements HasForms
                                     ->searchable()
                                     ->preload()
                                     ->multiple(),
-
                                 Forms\Components\Select::make('collections')
                                     ->label(__('shopper::pages/collections.menu'))
                                     ->relationship('collections', 'name')

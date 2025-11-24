@@ -31,6 +31,7 @@ class RolePermission extends Component implements HasActions, HasForms
 
     public Role $role;
 
+    /** @var array<string, mixed>|null */
     public ?array $data = [];
 
     public function mount(): void
@@ -46,7 +47,7 @@ class RolePermission extends Component implements HasActions, HasForms
                     ->label(__('shopper::modals.roles.labels.name'))
                     ->placeholder('manager')
                     ->live(onBlur: true)
-                    ->afterStateUpdated(fn (Set $set, ?string $state) => $set('display_name', Str::title($state)))
+                    ->afterStateUpdated(fn (Set $set, ?string $state): mixed => $set('display_name', Str::title($state)))
                     ->required(),
                 Components\TextInput::make('display_name')
                     ->label(__('shopper::forms.label.display_name'))
@@ -87,6 +88,6 @@ class RolePermission extends Component implements HasActions, HasForms
     public function render(): View
     {
         return view('shopper::livewire.pages.settings.team.role')
-            ->title(__('shopper::pages/settings/staff.roles') . ' ~ ' . $this->role->display_name);
+            ->title(__('shopper::pages/settings/staff.roles').' ~ '.$this->role->display_name);
     }
 }

@@ -6,6 +6,9 @@ namespace Shopper\Traits;
 
 trait LoadComponents
 {
+    /**
+     * @return array<string, mixed>
+     */
     public function loadLivewireComponents(string $feature): array
     {
         return array_merge(
@@ -18,7 +21,7 @@ trait LoadComponents
     {
         collect($this->componentsConfig)->each(function ($config): void {
             $this->mergeConfigFrom(
-                path: $this->root . "/config/components/{$config}.php",
+                path: $this->root."/config/components/{$config}.php",
                 key: "shopper.components.{$config}"
             );
         });

@@ -12,18 +12,24 @@ use Filament\Notifications\Notification;
 use Illuminate\Contracts\View\View;
 use Livewire\Component;
 use Shopper\Components;
+use Shopper\Core\Models\Product;
 
 /**
- * @property Forms\Form $form
+ * @property Form $form
  */
 class Seo extends Component implements HasForms
 {
     use InteractsWithForms;
 
+    /** @var Product */
     public $product;
 
+    /** @var array<string, mixed>|null */
     public ?array $data = [];
 
+    /**
+     * @param  Product  $product
+     */
     public function mount($product): void
     {
         $this->product = $product;
@@ -37,7 +43,6 @@ class Seo extends Component implements HasForms
             ->schema([
                 Forms\Components\Group::make()
                     ->schema(Components\Form\SeoField::make()),
-
                 Forms\Components\KeyValue::make('metadata')
                     ->reorderable(),
             ])

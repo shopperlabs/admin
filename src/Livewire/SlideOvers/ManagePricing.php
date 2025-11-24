@@ -9,31 +9,40 @@ use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
 use Shopper\Actions\Store\Product\SavePricingAction;
 use Shopper\Components\Form\CurrenciesField;
+use Shopper\Contracts\Priceable;
 use Shopper\Core\Models\Currency;
 use Shopper\Livewire\Components\SlideOverComponent;
 
 /**
- * @property Form $form
- * @property Collection $currencies
+ * @property-read Form $form
+ * @property-read Collection<int, Currency> $currencies
  */
 class ManagePricing extends SlideOverComponent implements HasForms
 {
     use InteractsWithForms;
 
-    public $model;
+    /** @var (Model&Priceable<Model>) */
+    public Model&Priceable $model;
 
     #[Locked]
     public ?int $currencyId = null;
 
+    /** @var array<string, mixed>|null */
     public ?array $data = [];
 
+    public static function panelMaxWidth(): string
+    {
+        return '4xl';
+    }
+
     /**
-     * @param  class-string | string  $modelType
+     * @param  class-string|string  $modelType
      */
     public function mount(int $modelId, string $modelType, ?int $currencyId = null): void
     {
@@ -51,39 +60,22 @@ class ManagePricing extends SlideOverComponent implements HasForms
             ->model($this->model);
     }
 
-    protected function getModelPrices(): array
-    {
-        $prices = collect();
-
-        foreach ($this->model->prices as $price) {
-            $prices->put(
-                $price->currency_id,
-                [
-                    'amount' => $price->amount,
-                    'compare_amount' => $price->compare_amount === 0 ? null : $price->compare_amount,
-                    'cost_amount' => $price->cost_amount === 0 ? null : $price->compare_amount,
-                ]
-            );
-        }
-
-        return $prices->toArray();
-    }
-
+    /**
+     * @return Collection<int, Currency>
+     */
     #[Computed]
     public function currencies(): Collection
     {
-        return Currency::query()
+        /** @var Collection<int, Currency> $currencies */
+        $currencies = Currency::query()
             ->select('id', 'name', 'code', 'symbol')
             ->whereIn(
                 column: 'id',
                 values: $this->currencyId ? [$this->currencyId] : shopper_setting('currencies')
             )
             ->get();
-    }
 
-    public static function panelMaxWidth(): string
-    {
-        return '4xl';
+        return $currencies;
     }
 
     public function save(): void
@@ -108,5 +100,27 @@ class ManagePricing extends SlideOverComponent implements HasForms
     public function render(): View
     {
         return view('shopper::livewire.slide-overs.add-pricing');
+    }
+
+    /**
+     * @return array<array-key, array<string, mixed>>
+     */
+    protected function getModelPrices(): array
+    {
+        $prices = collect();
+
+        // @phpstan-ignore-next-line
+        foreach ($this->model->prices as $price) {
+            $prices->put(
+                $price->currency_id,
+                [
+                    'amount' => $price->amount,
+                    'compare_amount' => $price->compare_amount === 0 ? null : $price->compare_amount,
+                    'cost_amount' => $price->cost_amount === 0 ? null : $price->compare_amount,
+                ]
+            );
+        }
+
+        return $prices->toArray();
     }
 }

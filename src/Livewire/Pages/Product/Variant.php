@@ -13,6 +13,8 @@ use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Support\Enums\MaxWidth;
 use Illuminate\Contracts\View\View;
+use Shopper\Core\Models\Product;
+use Shopper\Core\Models\ProductVariant;
 use Shopper\Core\Repositories\ProductRepository;
 use Shopper\Core\Repositories\VariantRepository;
 use Shopper\Livewire\Pages\AbstractPageComponent;
@@ -22,16 +24,26 @@ class Variant extends AbstractPageComponent implements HasActions, HasForms
     use InteractsWithActions;
     use InteractsWithForms;
 
+    /**
+     * @var Product
+     */
     public $product;
 
+    /**
+     * @var ProductVariant
+     */
     public $variant;
 
     public function mount(int $productId, int $variantId): void
     {
         $this->authorize('edit_products');
 
-        $this->product = (new ProductRepository)->getById($productId);
-        $this->variant = (new VariantRepository)
+        /** @var Product $product */
+        $product = (new ProductRepository)->getById($productId);
+        $this->product = $product;
+
+        /** @var ProductVariant $variant */
+        $variant = (new VariantRepository)
             ->with([
                 'prices',
                 'media',
@@ -39,6 +51,8 @@ class Variant extends AbstractPageComponent implements HasActions, HasForms
                 'values.attribute',
             ])
             ->getById($variantId);
+
+        $this->variant = $variant;
     }
 
     public function updateStockAction(): Action

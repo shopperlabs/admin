@@ -14,7 +14,7 @@ use Livewire\Component;
 use Shopper\Core\Models\Product;
 
 /**
- * @property Forms\Form $form
+ * @property Form $form
  */
 class Files extends Component implements HasForms
 {
@@ -22,6 +22,7 @@ class Files extends Component implements HasForms
 
     public Product $product;
 
+    /** @var array<string, mixed>|null */
     public ?array $data = [];
 
     public function mount(): void

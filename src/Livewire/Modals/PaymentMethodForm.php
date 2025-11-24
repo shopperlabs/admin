@@ -23,18 +23,19 @@ class PaymentMethodForm extends ModalComponent implements HasForms
 
     public ?int $paymentId = null;
 
+    /** @var array<string, mixed>|null */
     public ?array $data = [];
+
+    public static function modalMaxWidth(): string
+    {
+        return '2xl';
+    }
 
     public function mount(?int $paymentId = null): void
     {
         $this->paymentId = $paymentId;
 
         $this->form->fill(PaymentMethod::query()->find($paymentId)?->toArray());
-    }
-
-    public static function modalMaxWidth(): string
-    {
-        return '2xl';
     }
 
     public function form(Form $form): Form
@@ -53,7 +54,7 @@ class PaymentMethodForm extends ModalComponent implements HasForms
                     ->placeholder('NotchPay')
                     ->required()
                     ->live(onBlur: true)
-                    ->afterStateUpdated(fn (Set $set, ?string $state) => $set('slug', $state)),
+                    ->afterStateUpdated(fn (Set $set, ?string $state): mixed => $set('slug', $state)),
                 Components\Hidden::make('slug'),
                 Components\TextInput::make('link_url')
                     ->label(__('shopper::forms.label.payment_doc'))

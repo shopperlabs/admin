@@ -41,6 +41,11 @@ class AddProduct extends SlideOverComponent implements HasForms
 
     public ?string $currentProductType = null;
 
+    public static function panelMaxWidth(): string
+    {
+        return '5xl';
+    }
+
     public function mount(): void
     {
         $this->authorize('add_products');
@@ -78,7 +83,7 @@ class AddProduct extends SlideOverComponent implements HasForms
                                 ->columns(3)
                                 ->live()
                                 ->required(),
-                            Forms\Components\Livewire::make(ProductTypeConfiguration::class, fn (Forms\Get $get) => [
+                            Forms\Components\Livewire::make(ProductTypeConfiguration::class, fn (Forms\Get $get): array => [
                                 'defaultProductType' => $get('type'),
                             ]),
                         ]),
@@ -97,8 +102,10 @@ class AddProduct extends SlideOverComponent implements HasForms
                                         ->required()
                                         ->maxLength(255)
                                         ->live(onBlur: true)
-                                        ->afterStateUpdated(function ($state, Forms\Set $set): void {
-                                            $set('slug', Str::slug($state));
+                                        ->afterStateUpdated(function (?string $state, Forms\Set $set): void {
+                                            if ($state) {
+                                                $set('slug', Str::slug($state));
+                                            }
                                         }),
                                     Forms\Components\TextInput::make('slug')
                                         ->label(__('shopper::forms.label.slug'))
@@ -287,11 +294,6 @@ class AddProduct extends SlideOverComponent implements HasForms
             parameters: ['product' => $product],
             navigate: true
         );
-    }
-
-    public static function panelMaxWidth(): string
-    {
-        return '5xl';
     }
 
     public function render(): View

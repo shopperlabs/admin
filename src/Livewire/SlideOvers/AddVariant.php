@@ -28,10 +28,10 @@ use Shopper\Helpers\MapProductOptions;
 use Shopper\Livewire\Components\SlideOverComponent;
 
 /**
- * @property Forms\Form $form
- * @property Collection $currencies
- * @property Collection $options
- * @property array $variantsOptions
+ * @property-read Form $form
+ * @property-read Collection<int, Currency> $currencies
+ * @property-read Collection<string, mixed> $options
+ * @property-read array<array-key, mixed> $variantsOptions
  */
 class AddVariant extends SlideOverComponent implements HasForms
 {
@@ -40,7 +40,13 @@ class AddVariant extends SlideOverComponent implements HasForms
     #[Locked]
     public int $productId;
 
+    /** @var array<string, mixed>|null */
     public ?array $data = [];
+
+    public static function panelMaxWidth(): string
+    {
+        return '5xl';
+    }
 
     public function mount(): void
     {
@@ -67,7 +73,6 @@ class AddVariant extends SlideOverComponent implements HasForms
                                     ->label(__('shopper::forms.label.sku'))
                                     ->unique(shopper_table('product_variants'), 'sku')
                                     ->maxLength(255),
-
                                 Forms\Components\Group::make()
                                     ->visible(fn (): bool => count($this->variantsOptions) > 0)
                                     ->schema([
@@ -80,11 +85,10 @@ class AddVariant extends SlideOverComponent implements HasForms
                                                     </p>
                                                 BLADE))
                                             ),
-
                                         Forms\Components\Group::make()
                                             ->schema(
                                                 $this->options->map(
-                                                    fn ($option): Forms\Components\Select => Forms\Components\Select::make('values.' . $option['id'])
+                                                    fn (array $option): Forms\Components\Select => Forms\Components\Select::make('values.'.$option['id'])
                                                         ->label($option['name'])
                                                         ->key($option['key'])
                                                         ->required()
@@ -92,14 +96,13 @@ class AddVariant extends SlideOverComponent implements HasForms
                                                         ->optionsLimit(10)
                                                         ->options(
                                                             collect($option['values'])->mapWithKeys(
-                                                                fn ($value): array => [$value['id'] => $value['value']]
+                                                                fn (array $value): array => [$value['id'] => $value['value']]
                                                             )
                                                         )
                                                         ->native(false)
                                                 )->toArray()
                                             )
                                             ->columns(3),
-
                                         Forms\Components\Placeholder::make('alert')
                                             ->visible(fn (Forms\Get $get): bool => $get('values') !== null && $this->variantAlreadyExist($get('values')))
                                             ->hiddenLabel()
@@ -121,7 +124,6 @@ class AddVariant extends SlideOverComponent implements HasForms
                                     throw new Halt;
                                 }
                             }),
-
                         Components\Wizard\StepColumn::make(__('shopper::words.media'))
                             ->icon('untitledui-image')
                             ->schema([
@@ -142,12 +144,10 @@ class AddVariant extends SlideOverComponent implements HasForms
                                     ->columnSpanFull(),
                             ])
                             ->columns(5),
-
                         Components\Wizard\StepColumn::make(__('shopper::words.pricing'))
                             ->icon('untitledui-coins-stacked-02')
                             ->schema(CurrenciesField::make($this->currencies))
                             ->statePath('prices'),
-
                         Components\Wizard\StepColumn::make(__('shopper::pages/settings/menu.location'))
                             ->icon('untitledui-package')
                             ->schema([
@@ -158,14 +158,12 @@ class AddVariant extends SlideOverComponent implements HasForms
                                             {{ __('shopper::pages/products.stock_inventory_description', ['item' => __('shopper::pages/products.variants.single')]) }}
                                         </p>
                                     BLADE))),
-
                                 Forms\Components\Grid::make()
                                     ->schema([
                                         Forms\Components\TextInput::make('barcode')
                                             ->label(__('shopper::forms.label.barcode'))
                                             ->unique(shopper_table('product_variants'), 'barcode')
                                             ->maxLength(255),
-
                                         Forms\Components\TextInput::make('quantity')
                                             ->label(__('shopper::forms.label.quantity'))
                                             ->numeric()
@@ -208,29 +206,29 @@ class AddVariant extends SlideOverComponent implements HasForms
         );
     }
 
-    protected function variantAlreadyExist(array $optionsValues = []): bool
-    {
-        foreach ($this->variantsOptions as $option) {
-            if (array_diff(array_values($optionsValues), $option) === []) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
+    /**
+     * @return Collection<int, Currency>
+     */
     #[Computed]
     public function currencies(): Collection
     {
-        return Currency::query()
+        /** @var Collection<int, Currency> $currencies */
+        $currencies = Currency::query()
             ->select('id', 'name', 'code', 'symbol')
             ->whereIn(
                 column: 'id',
                 values: shopper_setting('currencies')
             )
             ->get();
+
+        return $currencies;
     }
 
+    /**
+     * @return array<array-key, mixed>
+     *
+     * @throws \Shopper\Core\Exceptions\ModelRepositoryException
+     */
     #[Computed]
     public function variantsOptions(): array
     {
@@ -245,6 +243,9 @@ class AddVariant extends SlideOverComponent implements HasForms
             ->toArray();
     }
 
+    /**
+     * @return Collection<string, mixed>
+     */
     #[Computed]
     public function options(): Collection
     {
@@ -254,13 +255,22 @@ class AddVariant extends SlideOverComponent implements HasForms
         return collect(MapProductOptions::generate($product));
     }
 
-    public static function panelMaxWidth(): string
-    {
-        return '5xl';
-    }
-
     public function render(): View
     {
         return view('shopper::livewire.slide-overs.add-variant');
+    }
+
+    /**
+     * @param  array<array-key, mixed>  $optionsValues
+     */
+    protected function variantAlreadyExist(array $optionsValues = []): bool
+    {
+        foreach ($this->variantsOptions as $option) {
+            if (array_diff(array_values($optionsValues), $option) === []) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

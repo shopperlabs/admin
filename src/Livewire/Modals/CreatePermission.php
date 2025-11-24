@@ -23,7 +23,15 @@ class CreatePermission extends ModalComponent implements HasForms
 
     public int $roleId;
 
+    /**
+     * @var array<string, mixed>|null
+     */
     public ?array $data = [];
+
+    public static function modalMaxWidth(): string
+    {
+        return 'xl';
+    }
 
     public function mount(int $id): void
     {
@@ -79,11 +87,6 @@ class CreatePermission extends ModalComponent implements HasForms
         $this->dispatch('permissionAdded');
 
         $this->closeModal();
-    }
-
-    public static function modalMaxWidth(): string
-    {
-        return 'xl';
     }
 
     public function render(): View

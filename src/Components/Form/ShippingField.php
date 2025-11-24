@@ -19,50 +19,50 @@ final class ShippingField
                 ->label(__('shopper::forms.label.width'))
                 ->numeric()
                 ->select(
-                    fn () => Forms\Components\Select::make('width_unit')
+                    fn (): Forms\Components\Select => Forms\Components\Select::make('width_unit')
                         ->selectablePlaceholder(false)
                         ->native(false)
-                        ->options(Dimension\Length::toArray())
+                        ->options(Dimension\Length::class)
                         ->default(Dimension\Length::CM)
                 ),
             TextInputSelect::make('height_value')
                 ->label(__('shopper::forms.label.height'))
                 ->numeric()
                 ->select(
-                    fn () => Forms\Components\Select::make('height_unit')
+                    fn (): Forms\Components\Select => Forms\Components\Select::make('height_unit')
                         ->selectablePlaceholder(false)
                         ->native(false)
-                        ->options(Dimension\Length::toArray())
+                        ->options(Dimension\Length::class)
                         ->default(Dimension\Length::CM)
                 ),
             TextInputSelect::make('weight_value')
                 ->label(__('shopper::forms.label.weight'))
                 ->numeric()
                 ->select(
-                    fn () => Forms\Components\Select::make('weight_unit')
+                    fn (): Forms\Components\Select => Forms\Components\Select::make('weight_unit')
                         ->selectablePlaceholder(false)
                         ->native(false)
-                        ->options(Dimension\Weight::toArray())
+                        ->options(Dimension\Weight::class)
                         ->default(Dimension\Weight::KG)
                 ),
             TextInputSelect::make('volume_value')
                 ->label(__('shopper::forms.label.volume'))
                 ->numeric()
                 ->select(
-                    fn () => Forms\Components\Select::make('volume_unit')
+                    fn (): Forms\Components\Select => Forms\Components\Select::make('volume_unit')
                         ->selectablePlaceholder(false)
                         ->native(false)
-                        ->options(Dimension\Volume::toArray())
+                        ->options(Dimension\Volume::class)
                         ->default(Dimension\Volume::ML)
                 ),
             TextInputSelect::make('depth_value')
                 ->label(__('shopper::forms.label.depth'))
                 ->numeric()
                 ->select(
-                    fn () => Forms\Components\Select::make('depth_unit')
+                    fn (): Forms\Components\Select => Forms\Components\Select::make('depth_unit')
                         ->selectablePlaceholder(false)
                         ->native(false)
-                        ->options(Dimension\Length::toArray())
+                        ->options(Dimension\Length::class)
                         ->default(Dimension\Length::CM)
                 ),
         ];

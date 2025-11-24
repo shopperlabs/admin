@@ -11,6 +11,7 @@ use Filament\Forms\Form;
 use Filament\Forms\Get;
 use Filament\Notifications\Notification;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\HtmlString;
 use Livewire\Attributes\Layout;
@@ -31,10 +32,12 @@ class General extends Component implements HasForms
     use InteractsWithForms;
     use SaveSettings;
 
+    /** @var array<string, mixed>|null */
     public ?array $data = [];
 
     public function mount(): void
     {
+        /** @var Collection<int, Setting> $settings */
         $settings = Setting::query()->whereIn('key', [
             'name',
             'legal_name',
@@ -58,7 +61,7 @@ class General extends Component implements HasForms
 
         $this->form->fill(
             $settings->mapWithKeys(
-                fn (Setting $item) => [$item['key'] => $item['value']]
+                fn (Setting $item): array => [$item['key'] => $item['value']]
             )->toArray()
         );
     }
@@ -178,7 +181,7 @@ class General extends Component implements HasForms
                             ->prefix(
                                 fn (): HtmlString => new HtmlString(Blade::render(<<<'Blade'
                                     <x-shopper::icons.facebook
-                                        class="h-5 w-5 text-gray-400 dark:text-gray-500"
+                                        class="size-5 text-gray-400 dark:text-gray-500"
                                         aria-hidden="true"
                                     />
                                 Blade))
@@ -191,7 +194,7 @@ class General extends Component implements HasForms
                                     ->prefix(
                                         fn (): HtmlString => new HtmlString(Blade::render(<<<'Blade'
                                             <x-shopper::icons.instagram
-                                                class="h-5 w-5 text-gray-400 dark:text-gray-500"
+                                                class="size-5 text-gray-400 dark:text-gray-500"
                                                 aria-hidden="true"
                                             />
                                         Blade))
@@ -202,7 +205,7 @@ class General extends Component implements HasForms
                                     ->prefix(
                                         fn (): HtmlString => new HtmlString(Blade::render(<<<'Blade'
                                             <x-shopper::icons.twitter
-                                                class="h-5 w-5 text-gray-400 dark:text-gray-500"
+                                                class="size-5 text-gray-400 dark:text-gray-500"
                                                 aria-hidden="true"
                                             />
                                         Blade))

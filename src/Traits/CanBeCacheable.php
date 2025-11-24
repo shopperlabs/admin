@@ -11,11 +11,11 @@ use Illuminate\Support\Facades\Cache;
 
 trait CanBeCacheable
 {
-    protected null | bool | Closure $cacheable = null;
+    protected null|bool|Closure $cacheable = null;
 
-    protected null | int | DateInterval | DateTimeInterface | Closure $cacheDuration = null;
+    protected null|int|DateInterval|DateTimeInterface|Closure $cacheDuration = null;
 
-    public function cacheable(bool | Closure $cacheable = true): static
+    public function cacheable(bool|Closure $cacheable = true): static
     {
         $this->cacheable = $cacheable;
 
@@ -29,21 +29,21 @@ trait CanBeCacheable
         return $this->evaluate($cacheable);
     }
 
-    public function cacheDuration(int | DateInterval | DateTimeInterface | Closure $cacheDuration): static
+    public function cacheDuration(int|DateInterval|DateTimeInterface|Closure $cacheDuration): static
     {
         $this->cacheDuration = $cacheDuration;
 
         return $this;
     }
 
-    public function getCacheDuration()
+    public function getCacheDuration(): mixed
     {
         $duration = $this->cacheDuration ?? now()->add(config('shopper.admin.icon-picker.duration', '7 days'));
 
         return $this->evaluate($duration);
     }
 
-    protected function tryCache(string $key, Closure $callback)
+    protected function tryCache(string $key, Closure $callback): mixed
     {
         if (! $this->getCacheable()) {
             return $callback->call($this);

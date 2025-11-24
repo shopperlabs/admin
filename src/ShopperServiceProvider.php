@@ -12,6 +12,7 @@ use Filament\Tables\Columns\Column;
 use Filament\Tables\Columns\TextColumn;
 use Livewire\Livewire;
 use PragmaRX\Google2FA\Google2FA;
+use Shopper\Concerns\TwoFactorAuthenticationProvider;
 use Shopper\Contracts\FailedTwoFactorLoginResponse as FailedTwoFactorLoginResponseContract;
 use Shopper\Contracts\LoginResponse as LoginResponseContract;
 use Shopper\Contracts\TwoFactorAuthenticationProvider as TwoFactorAuthenticationProviderContract;
@@ -31,7 +32,6 @@ use Shopper\Livewire\Components;
 use Shopper\Livewire\Pages;
 use Shopper\Providers\FeatureServiceProvider;
 use Shopper\Providers\SidebarServiceProvider;
-use Shopper\Providers\TwoFactorAuthenticationProvider;
 use Shopper\Traits\LoadComponents;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
@@ -41,6 +41,7 @@ final class ShopperServiceProvider extends PackageServiceProvider
     use HasRegisterConfigAndMigrationFiles;
     use LoadComponents;
 
+    /** @var string[] */
     protected array $configFiles = [
         'admin',
         'auth',
@@ -49,9 +50,10 @@ final class ShopperServiceProvider extends PackageServiceProvider
         'settings',
     ];
 
+    /** @var string[] */
     protected array $componentsConfig = ['account', 'dashboard', 'setting'];
 
-    protected string $root = __DIR__ . '/..';
+    protected string $root = __DIR__.'/..';
 
     public function configurePackage(Package $package): void
     {
@@ -97,7 +99,7 @@ final class ShopperServiceProvider extends PackageServiceProvider
 
         $this->app->singleton(
             TwoFactorAuthenticationProviderContract::class,
-            fn ($app) => new TwoFactorAuthenticationProvider($app->make(Google2FA::class))
+            fn ($app): TwoFactorAuthenticationProvider => new TwoFactorAuthenticationProvider($app->make(Google2FA::class))
         );
 
         $this->app->bind(LoginResponseContract::class, LoginResponse::class);
@@ -107,15 +109,15 @@ final class ShopperServiceProvider extends PackageServiceProvider
 
         $this->app->scoped('shopper', fn (): ShopperPanel => new ShopperPanel);
 
-        $this->loadViewsFrom($this->root . '/resources/views', 'shopper');
+        $this->loadViewsFrom($this->root.'/resources/views', 'shopper');
     }
 
     public function bootingPackage(): void
     {
-        TextColumn::macro('currency', function (string | Closure | null $currency = null): TextColumn {
+        TextColumn::macro('currency', function (string|Closure|null $currency = null): TextColumn {
             /*** @var TextColumn $this */
             // @phpstan-ignore-next-line
-            $this->formatStateUsing(static function (Column $column, $state) use ($currency): ?string {
+            $this->formatStateUsing(static function (Column $column, ?int $state) use ($currency): ?string {
                 if (blank($state)) {
                     return null;
                 }
@@ -158,6 +160,9 @@ final class ShopperServiceProvider extends PackageServiceProvider
         }
     }
 
+    /**
+     * @return string[]
+     */
     protected function getLivewireComponents(): array
     {
         return [
@@ -169,9 +174,6 @@ final class ShopperServiceProvider extends PackageServiceProvider
             'initialize-store-information' => Components\Initialization\Steps\StoreInformation::class,
             'initialize-store-address' => Components\Initialization\Steps\StoreAddress::class,
             'initialize-store-social-link' => Components\Initialization\Steps\StoreSocialLink::class,
-            'products.attributes.multiple-choice' => Components\Products\Attributes\MultipleChoice::class,
-            'products.attributes.single-choice' => Components\Products\Attributes\SingleChoice::class,
-            'products.attributes.text' => Components\Products\Attributes\Text::class,
         ];
     }
 

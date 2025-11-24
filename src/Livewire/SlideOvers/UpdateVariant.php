@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\HtmlString;
 use Livewire\Attributes\Computed;
 use Shopper\Components;
+use Shopper\Core\Models\AttributeValue;
+use Shopper\Core\Models\Product;
 use Shopper\Core\Models\ProductVariant;
 use Shopper\Core\Repositories\ProductRepository;
 use Shopper\Core\Repositories\VariantRepository;
@@ -23,32 +25,46 @@ use Shopper\Helpers\MapProductOptions;
 use Shopper\Livewire\Components\SlideOverComponent;
 
 /**
- * @property Form $form
- * @property Collection $options
- * @property array $variantsOptions
+ * @property-read Form $form
+ * @property-read Collection<string, mixed> $options
+ * @property-read array<array-key, mixed> $variantsOptions
  */
 class UpdateVariant extends SlideOverComponent implements HasForms
 {
     use InteractsWithForms;
 
+    /**
+     * @var ProductVariant
+     */
     public $variant;
 
+    /**
+     * @var Product
+     */
     public $product;
 
+    /**
+     * @var array<string, mixed>|null
+     */
     public ?array $data = [];
 
     public bool $alert = false;
 
     public function mount(int $productId, int $variantId): void
     {
-        $this->product = (new ProductRepository)->getById($productId);
-        $this->variant = (new VariantRepository)->with(['values', 'values.attribute'])->getById($variantId);
+        /** @var Product $product */
+        $product = (new ProductRepository)->getById($productId);
+        /** @var ProductVariant $variant */
+        $variant = (new VariantRepository)->with(['values', 'values.attribute'])->getById($variantId);
+
+        $this->product = $product;
+        $this->variant = $variant;
 
         $this->form->fill(array_merge(
             $this->variant->toArray(),
             count($this->variantsOptions)
                 ? ['values' => $this->variant->values->mapWithKeys( // @phpstan-ignore-line
-                    fn ($value) => [
+                    fn (AttributeValue $value): array => [
                         $value->attribute->id => $value->id,
                     ]
                 )->toArray()]
@@ -67,14 +83,13 @@ class UpdateVariant extends SlideOverComponent implements HasForms
                     ->maxLength(255),
                 Forms\Components\Checkbox::make('allow_backorder')
                     ->label(__('shopper::pages/products.allow_backorder')),
-
                 Forms\Components\Group::make()
                     ->visible(fn (): bool => count($this->variantsOptions) > 0)
                     ->schema([
                         Forms\Components\Group::make()
                             ->schema(
                                 $this->options->map(
-                                    fn ($option): Forms\Components\Select => Forms\Components\Select::make('values.' . $option['id'])
+                                    fn (array $option): Forms\Components\Select => Forms\Components\Select::make('values.'.$option['id'])
                                         ->label($option['name'])
                                         ->key($option['key'])
                                         ->required()
@@ -82,14 +97,13 @@ class UpdateVariant extends SlideOverComponent implements HasForms
                                         ->optionsLimit(10)
                                         ->options(
                                             collect($option['values'])->mapWithKeys(
-                                                fn ($value): array => [$value['id'] => $value['value']]
+                                                fn (array $value): array => [$value['id'] => $value['value']]
                                             )
                                         )
                                         ->native(false)
                                 )->toArray()
                             )
                             ->columns(3),
-
                         Forms\Components\Placeholder::make('alert')
                             ->visible(fn (Forms\Get $get): bool => $get('values') !== null && $this->alert)
                             ->hiddenLabel()
@@ -103,9 +117,7 @@ class UpdateVariant extends SlideOverComponent implements HasForms
                             )
                             ->columnSpanFull(),
                     ]),
-
                 Components\Separator::make(),
-
                 Forms\Components\Group::make()
                     ->schema([
                         Forms\Components\Placeholder::make('dimensions')
@@ -117,7 +129,6 @@ class UpdateVariant extends SlideOverComponent implements HasForms
                                     </p>
                                 BLADE))
                             ),
-
                         Forms\Components\Grid::make()
                             ->schema(Components\Form\ShippingField::make()),
                     ]),
@@ -153,23 +164,20 @@ class UpdateVariant extends SlideOverComponent implements HasForms
         );
     }
 
-    protected function variantAlreadyExist(array $optionsValues = []): bool
-    {
-        foreach ($this->variantsOptions as $option) {
-            if (array_diff(array_values($optionsValues), $option) === []) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
+    /**
+     * @return Collection<string, mixed>
+     */
     #[Computed]
     public function options(): Collection
     {
         return collect(MapProductOptions::generate($this->product));
     }
 
+    /**
+     * @return array<array-key, mixed>
+     *
+     * @throws \Shopper\Core\Exceptions\ModelRepositoryException
+     */
     #[Computed]
     public function variantsOptions(): array
     {
@@ -181,7 +189,7 @@ class UpdateVariant extends SlideOverComponent implements HasForms
             ->map(
                 fn (ProductVariant $variant): array => $variant->values->pluck('id')->toArray() // @phpstan-ignore-line
             )
-            ->reject(fn ($value) => array_diff($value, $this->variant->values->pluck('id')->toArray()) === [])
+            ->reject(fn ($value): bool => array_diff($value, $this->variant->values->pluck('id')->toArray()) === [])
             ->values()
             ->toArray();
     }
@@ -189,5 +197,19 @@ class UpdateVariant extends SlideOverComponent implements HasForms
     public function render(): View
     {
         return view('shopper::livewire.slide-overs.update-variant');
+    }
+
+    /**
+     * @param  array<array-key, mixed>  $optionsValues
+     */
+    protected function variantAlreadyExist(array $optionsValues = []): bool
+    {
+        foreach ($this->variantsOptions as $option) {
+            if (array_diff(array_values($optionsValues), $option) === []) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
