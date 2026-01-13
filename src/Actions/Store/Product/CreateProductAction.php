@@ -7,9 +7,8 @@ namespace Shopper\Actions\Store\Product;
 use Filament\Forms\Form;
 use Illuminate\Support\Arr;
 use Shopper\Actions\Store\InitialQuantityInventory;
-use Shopper\Core\Events\Products\Created;
+use Shopper\Core\Events\Products\ProductCreated;
 use Shopper\Core\Models\Product;
-use Shopper\Core\Repositories\ProductRepository;
 use Shopper\Feature;
 
 final class CreateProductAction
@@ -18,8 +17,7 @@ final class CreateProductAction
     {
         $state = $form->getState();
 
-        /** @var Product $product */
-        $product = (new ProductRepository)->create(
+        $product = Product::resolvedQuery()->create(
             Arr::except($state, ['quantity', 'categories'])
         );
 
@@ -42,7 +40,7 @@ final class CreateProductAction
             ]);
         }
 
-        event(new Created($product));
+        event(new ProductCreated($product));
 
         return $product;
     }
