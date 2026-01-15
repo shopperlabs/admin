@@ -22,22 +22,24 @@
                 'inventory',
                 'seo',
                 'shipping',
-                'related'
+                'related',
             ],
-            activeTab: @entangle('activeTab')
+            activeTab: @entangle('activeTab'),
         }"
     >
-        <div @class([
-            'sticky z-30 bg-white/75 backdrop-blur-sm dark:bg-gray-900/80',
-            '-top-2' => $product->type,
-            'top-6' => ! $product->type
-        ])>
+        <div
+            @class([
+                'sticky z-30 bg-white/75 backdrop-blur-sm dark:bg-gray-900/80',
+                '-top-2' => $product->type,
+                'top-6' => ! $product->type,
+            ])
+        >
             <div class="space-y-4">
                 <x-shopper::container>
                     <x-shopper::heading>
                         <x-slot:title>
                             <div class="space-y-1">
-                                @if($product->type)
+                                @if ($product->type)
                                     <x-filament::badge
                                         :color="$product->type->getColor()"
                                         :icon="$product->type->getIcon()"
@@ -46,6 +48,7 @@
                                         {{ $product->type->getLabel() }}
                                     </x-filament::badge>
                                 @endif
+
                                 <h2
                                     class="font-heading text-2xl font-bold leading-6 text-gray-900 dark:text-white sm:truncate sm:text-3xl sm:leading-9"
                                 >

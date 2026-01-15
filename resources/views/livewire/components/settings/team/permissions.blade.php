@@ -8,7 +8,7 @@
         </p>
     </div>
     <div
-        class="mt-4 divide-y divide-gray-200 bg-white overflow-x-auto border-t border-gray-200 dark:bg-transparent dark:divide-white/10 dark:border-white/10"
+        class="mt-4 divide-y divide-gray-200 overflow-x-auto border-t border-gray-200 bg-white dark:divide-white/10 dark:border-white/10 dark:bg-transparent"
     >
         @foreach ($groupPermissions as $group => $permissions)
             <div>
@@ -53,7 +53,7 @@
                                 @if ($permission->users->count() > 0)
                                     <div class="flex items-center space-x-2">
                                         <div class="flex shrink-0 -space-x-1">
-                                            @foreach ($permission->users->limit(3) as $user)
+                                            @foreach ($permission->users->take(3) as $user)
                                                 <img
                                                     class="shadow-solid size-6 max-w-none rounded-full"
                                                     src="{{ $user->picture }}"

@@ -14,7 +14,7 @@
                     type="button"
                     wire:click="$dispatch('openModal', {
                         component: 'shopper-modals.related-products-list',
-                        arguments: { productId: {{ $product->id }}, ids: {{ json_encode($this->productsIds) }} },
+                        arguments: { product: {{ $product }}, ids: {{ json_encode($this->productsIds) }} },
                     })"
                 >
                     {{ __('shopper::layout.account_dropdown.add_product') }}
@@ -33,7 +33,7 @@
                                 <img
                                     src="{{ $relatedProduct->getFirstMediaUrl(config('shopper.media.storage.thumbnail_collection')) }}"
                                     alt="{{ $relatedProduct->name }} Thumbnail"
-                                    class="h-40 w-full max-w-none object-cover object-center rounded-lg"
+                                    class="h-40 w-full max-w-none rounded-lg object-cover object-center"
                                 />
                             </div>
                             <div class="absolute right-4 top-4">
@@ -57,7 +57,10 @@
                         <div class="mt-4 flex items-start justify-between">
                             <div>
                                 <h3 class="text-sm">
-                                    <x-shopper::link class="text-gray-950 font-semibold hover:text-gray-700 dark:text-gray-300 dark:hover:text-white" :href="route('shopper.products.edit', $relatedProduct)">
+                                    <x-shopper::link
+                                        class="font-semibold text-gray-950 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white"
+                                        :href="route('shopper.products.edit', $relatedProduct)"
+                                    >
                                         {{ $relatedProduct->name }}
                                     </x-shopper::link>
                                 </h3>
@@ -86,7 +89,7 @@
                         type="button"
                         wire:click="$dispatch('openModal', {
                             component: 'shopper-modals.related-products-list',
-                            arguments: { productId: {{ $product->id }}, ids: {{ json_encode($this->productsIds) }} },
+                            arguments: { product: {{ $product }}, ids: {{ json_encode($this->productsIds) }} },
                         })"
                     >
                         <x-untitledui-plus class="mr-2 size-5" stroke-width="1.5" aria-hidden="true" />

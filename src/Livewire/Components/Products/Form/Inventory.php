@@ -15,29 +15,29 @@ use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Model;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Shopper\Components;
+use Shopper\Core\Models\Contracts\Product as ProductContract;
 use Shopper\Core\Models\InventoryHistory;
-use Shopper\Core\Models\Product;
 
 /**
- * @property Form $form
+ * @property-read Form $form
  */
 class Inventory extends Component implements HasForms, HasTable
 {
     use InteractsWithForms;
     use InteractsWithTable;
 
-    public Product $product;
+    /** @var Model&ProductContract */
+    public ProductContract $product;
 
     /** @var array<string, mixed>|null */
     public ?array $data = [];
 
-    public function mount(Product $product): void
+    public function mount(): void
     {
-        $this->product = $product;
-
         $this->form->fill($this->product->toArray());
     }
 
@@ -80,7 +80,7 @@ class Inventory extends Component implements HasForms, HasTable
                 InventoryHistory::with(['inventory', 'stockable'])
                     ->where('stockable_id', $this->product->id)
                     ->where('stockable_type', 'product')
-                    ->orderByDesc('created_at')
+                    ->latest()
             )
             ->columns([
                 Tables\Columns\TextColumn::make('created_at')
@@ -168,7 +168,7 @@ class Inventory extends Component implements HasForms, HasTable
                             ->success()
                             ->send();
 
-                        $this->dispatch('updateInventory');
+                        $this->dispatch('inventory.updated');
                     }),
             ])
             ->filters([
@@ -195,7 +195,7 @@ class Inventory extends Component implements HasForms, HasTable
             ->send();
     }
 
-    #[On('updateInventory')]
+    #[On('inventory.updated')]
     public function render(): View
     {
         return view('shopper::livewire.components.products.forms.inventory');

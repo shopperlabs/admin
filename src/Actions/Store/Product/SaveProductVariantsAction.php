@@ -4,17 +4,19 @@ declare(strict_types=1);
 
 namespace Shopper\Actions\Store\Product;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Shopper\Actions\Store\InitialQuantityInventory;
-use Shopper\Core\Models\Product;
-use Shopper\Core\Models\ProductVariant;
+use Shopper\Core\Models\Contracts\Product;
+use Shopper\Core\Models\Contracts\ProductVariant;
 use Throwable;
 
 final class SaveProductVariantsAction
 {
     /**
      * @param  array<string, mixed>  $variants
+     * @param  Model&Product  $product
      * @return array<string, mixed>
      *
      * @throws Throwable
@@ -26,8 +28,8 @@ final class SaveProductVariantsAction
         foreach ($variants as $variantState) {
             /** @var ProductVariant $variant */
             $variant = $variantState['variant_id']
-                ? ProductVariant::resolvedQuery()->findOrFail($variantState['variant_id'])
-                : ProductVariant::resolvedQuery()->create([
+                ? resolve(ProductVariant::class)::query()->findOrFail($variantState['variant_id'])
+                : resolve(ProductVariant::class)::query()->create([
                     'name' => $variantState['name'],
                     'product_id' => $product->id,
                     'sku' => $variantState['sku'],
@@ -36,7 +38,8 @@ final class SaveProductVariantsAction
             $price = (float) $variantState['price'];
 
             if ($price > 0) {
-                $defaultCurrencyId = (int) shopper_setting('default_currency_id');
+                /** @var int $defaultCurrencyId */
+                $defaultCurrencyId = shopper_setting('default_currency_id');
 
                 $variant->prices()
                     ->where('currency_id', $defaultCurrencyId)
@@ -48,7 +51,8 @@ final class SaveProductVariantsAction
                 ]);
             }
 
-            $stock = (int) data_get($variantState, 'stock');
+            /** @var int $stock */
+            $stock = data_get($variantState, 'stock');
 
             if ($stock > 0) {
                 $variant->clearStock();
@@ -64,9 +68,12 @@ final class SaveProductVariantsAction
 
         $variantIds = collect($variants)->pluck('variant_id');
 
-        /** @var Collection<int, ProductVariant> $variantsToDelete */
+        /** @var Collection<int, Model&ProductVariant> $variantsToDelete */
         $variantsToDelete = $product->variants()->whereNotIn('id', $variantIds)->get();
-        $variantsToDelete->each(fn (ProductVariant $variant) => $variant->delete());
+        $variantsToDelete->each(
+            /** @param Model&ProductVariant $variant */
+            fn (ProductVariant $variant) => $variant->delete()
+        );
 
         DB::commit();
 

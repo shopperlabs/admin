@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace Shopper\Livewire\Components\Customers;
 
 use Illuminate\Contracts\View\View;
-use Illuminate\Support\Collection;
+use Illuminate\Database\Eloquent\Collection;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
-use Shopper\Core\Contracts\ShopperUser;
 use Shopper\Core\Models\Address;
+use Shopper\Core\Models\Contracts\Address as AddressContract;
+use Shopper\Core\Models\Contracts\ShopperUser;
 
 class Addresses extends Component
 {
@@ -21,7 +22,7 @@ class Addresses extends Component
     #[Computed(persist: true)]
     public function addresses(): Collection
     {
-        return Address::with('country')
+        return resolve(AddressContract::class)::with('country')
             ->whereBelongsTo($this->customer) // @phpstan-ignore-line
             ->get();
     }
