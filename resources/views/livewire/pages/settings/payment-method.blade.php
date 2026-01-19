@@ -15,20 +15,12 @@
         </x-shopper::breadcrumb>
         <x-shopper::heading class="my-6" :title="__('shopper::pages/settings/payments.title')">
             <x-slot name="action">
-                <x-shopper::buttons.primary
-                    wire:click="$dispatch(
-                        'openModal',
-                        { component: 'shopper-modals.payment-method-form' }
-                    )"
-                    type="button"
-                >
-                    {{ __('shopper::pages/settings/payments.add_payment') }}
-                </x-shopper::buttons.primary>
+                {{ $this->createPaymentAction }}
             </x-slot>
         </x-shopper::heading>
     </x-shopper::container>
 
-    <div class="relative space-y-4 border-gray-200 px-4 dark:border-white/10 lg:border-t lg:px-0">
+    <div class="relative space-y-4 border-gray-200 px-4 lg:border-t lg:px-0 dark:border-white/10">
         <x-filament::tabs :contained="true">
             <x-filament::tabs.item alpine-active="currentTab === 'general'" x-on:click="currentTab = 'general'">
                 {{ __('shopper::words.general') }}
@@ -41,4 +33,6 @@
             {{ $this->table }}
         </div>
     </x-shopper::container>
+
+    <x-filament-actions::modals />
 </div>

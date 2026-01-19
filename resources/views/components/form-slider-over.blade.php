@@ -14,7 +14,7 @@
                 <x-shopper::escape />
                 <button
                     type="button"
-                    class="rounded-md bg-white text-gray-400 outline-none hover:text-gray-500 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:bg-gray-900 dark:text-gray-500 dark:ring-offset-gray-900 dark:hover:text-gray-300"
+                    class="focus:ring-primary-500 rounded-md bg-white text-gray-400 outline-none hover:text-gray-500 focus:ring-2 focus:ring-offset-2 dark:bg-gray-900 dark:text-gray-500 dark:ring-offset-gray-900 dark:hover:text-gray-300"
                     wire:click="$dispatch('closePanel')"
                 >
                     <span class="sr-only">Close panel</span>
@@ -22,6 +22,7 @@
                 </button>
             </div>
         </div>
+
         @if ($description)
             <div class="mt-1">
                 <p class="text-sm text-gray-500 dark:text-gray-400">
@@ -34,12 +35,12 @@
         {{ $slot }}
     </div>
     <div class="flex shrink-0 justify-end gap-3 p-4">
-        <x-shopper::buttons.default wire:click="$dispatch('closePanel')" type="button" class="mt-3 sm:mt-0 sm:w-auto">
+        <x-filament::button color="gray" wire:click="$dispatch('closePanel')" type="button" class="mt-3 sm:mt-0 sm:w-auto">
             {{ __('shopper::forms.actions.cancel') }}
-        </x-shopper::buttons.default>
-        <x-shopper::buttons.primary type="submit" wire.loading.attr="disabled">
+        </x-filament::button>
+        <x-filament::button type="submit" wire.loading.attr="disabled">
             <x-shopper::loader wire:loading wire:target="{{ $action }}" class="text-white" />
             {{ __('shopper::forms.actions.save') }}
-        </x-shopper::buttons.primary>
+        </x-filament::button>
     </div>
 </form>

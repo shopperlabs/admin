@@ -22,7 +22,7 @@
 
     <div class="mt-4">
         <x-shopper::brand class="mx-auto h-12 w-auto" />
-        <h2 class="mt-6 text-center font-heading text-3xl font-bold leading-9 text-gray-900 dark:text-white">
+        <h2 class="font-heading mt-6 text-center text-3xl leading-9 font-bold text-gray-900 dark:text-white">
             {{ __('shopper::pages/auth.email.title') }}
         </h2>
         <p class="mt-3 text-center text-sm leading-5 text-gray-500 dark:text-gray-400">
@@ -47,10 +47,10 @@
         @enderror
 
         <div class="mt-5">
-            <x-shopper::buttons.primary type="submit" class="w-full justify-center">
+            <x-filament::button type="submit" class="w-full justify-center">
                 <x-shopper::loader wire:loading wire:target="sendResetPasswordLink" class="text-white" />
                 {{ __('shopper::pages/auth.email.action') }}
-            </x-shopper::buttons.primary>
+            </x-filament::button>
         </div>
         <p class="mt-5 text-center text-sm">
             <x-shopper::link

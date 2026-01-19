@@ -8,7 +8,7 @@
             <div class="flex items-center justify-between p-4 lg:p-5">
                 <div class="flex items-center space-x-3">
                     <x-untitledui-globe-05 class="size-6 text-gray-400 dark:text-gray-500" aria-hidden="true" />
-                    <x-filament::section.heading>
+                    <x-filament::section.heading class="font-semibold font-heading text-gray-950 dark:text-white">
                         {{ $zone->name }}
                         @if ($zone->code)
                             <span>({{ $zone->code }})</span>
@@ -23,27 +23,27 @@
             <div class="p-4 lg:p-5">
                 <div class="grid gap-6 sm:grid-cols-2">
                     <x-shopper::description-list.item
-                        icon="untitledui-bank-note"
+                        icon="phosphor-money"
                         :heading="__('shopper::forms.label.currency')"
                         :content="$zone->currency->name .' ('.$zone->currency->code.')'"
                     />
                     <x-shopper::description-list.item
-                        icon="untitledui-globe-02"
+                        icon="phosphor-globe-hemisphere-west"
                         :heading="__('shopper::forms.label.countries')"
                         :content="$zone->countries_name"
                     />
                     <x-shopper::description-list.item
-                        icon="untitledui-credit-card-02"
+                        icon="phosphor-credit-card"
                         :heading="__('shopper::pages/settings/payments.title')"
                         :content="$zone->payments_name"
                     />
                     <x-shopper::description-list.item
-                        icon="untitledui-truck-02"
+                        icon="phosphor-truck-trailer"
                         :heading="__('shopper::pages/settings/carriers.title')"
                         :content="$zone->carriers_name"
                     />
                     <div class="lg:col-span-2" wire:ignore>
-                        <x-shopper::description-list.item icon="untitledui-brackets" heading="Metadata">
+                        <x-shopper::description-list.item icon="phosphor-brackets-curly" :heading="__('Metadata')">
                             <x-shopper::code-preview
                                 :code="$zone->metadata"
                                 lang="json"
@@ -67,9 +67,5 @@
         </x-shopper::card>
     @endif
 
-    <div x-data>
-        <template x-teleport="body">
-            <x-filament-actions::modals />
-        </template>
-    </div>
+    <x-filament-actions::modals />
 </div>
