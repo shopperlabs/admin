@@ -15,7 +15,6 @@ use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Schema;
 use Illuminate\Contracts\View\View;
-use Illuminate\Database\Eloquent\Model;
 use Shopper\Core\Enum\Operator;
 use Shopper\Core\Enum\Rule;
 use Shopper\Core\Models\Contracts\Collection;
@@ -29,7 +28,7 @@ class CollectionRules extends SlideOverComponent implements HasActions, HasForms
     use InteractsWithActions;
     use InteractsWithForms;
 
-    public Model&Collection $collection;
+    public Collection $collection;
 
     /** @var array<string, mixed>|null */
     public ?array $data = [];
@@ -76,7 +75,7 @@ class CollectionRules extends SlideOverComponent implements HasActions, HasForms
                     ->defaultItems(1),
             ])
             ->statePath('data')
-            ->model($this->collection);
+            ->model($this->collection); // @phpstan-ignore-line
     }
 
     public function store(): void
