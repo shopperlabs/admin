@@ -32,6 +32,7 @@ use Livewire\Component;
 use Mckenziearts\Icons\Untitledui\Enums\Untitledui;
 use Shopper\Core\Models\Carrier;
 use Shopper\Shipping\Facades\Shipping;
+use Shopper\Shipping\Services\CarrierRateService;
 
 #[Layout('shopper::components.layouts.setting')]
 class Carriers extends Component implements HasActions, HasForms, HasTable
@@ -66,7 +67,7 @@ class Carriers extends Component implements HasActions, HasForms, HasTable
                 ImageColumn::make('logo')
                     ->label(__('shopper::forms.label.logo'))
                     ->circular()
-                    ->getStateUsing(fn (Carrier $record): ?string => $record->logoUrl())
+                    ->getStateUsing(fn (Carrier $record): ?string => resolve(CarrierRateService::class)->getLogoUrl($record))
                     ->defaultImageUrl(shopper_fallback_url()),
                 TextColumn::make('name')
                     ->label(__('shopper::forms.label.name'))
@@ -78,7 +79,7 @@ class Carriers extends Component implements HasActions, HasForms, HasTable
                     ->formatStateUsing(fn (?string $state): string => $state ? Shipping::driver($state)->name() : __('shopper::words.manual'))
                     ->color(fn (?string $state, Carrier $record): string => match (true) {
                         $state === null || $state === 'manual' => 'gray',
-                        $record->isDriverConfigured() => 'success',
+                        resolve(CarrierRateService::class)->isDriverConfigured($record) => 'success',
                         default => 'warning',
                     }),
                 ToggleColumn::make('is_enabled')
@@ -134,6 +135,8 @@ class Carriers extends Component implements HasActions, HasForms, HasTable
                     Select::make('driver')
                         ->label(__('shopper::forms.label.driver'))
                         ->options($this->getDriverOptions())
+                        ->default('manual')
+                        ->required()
                         ->helperText(__('shopper::pages/settings/carriers.driver_help'))
                         ->native(false)
                         ->allowHtml(),
