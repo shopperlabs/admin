@@ -17,7 +17,7 @@ use Shopper\Core\Enum\FulfillmentStatus;
 use Shopper\Core\Enum\OrderStatus;
 use Shopper\Core\Enum\PaymentStatus;
 use Shopper\Core\Events\Orders\OrderArchived;
-use Shopper\Core\Events\Orders\OrderCancelled;
+use Shopper\Core\Events\Orders\OrderCancel;
 use Shopper\Core\Events\Orders\OrderCompleted;
 use Shopper\Core\Events\Orders\OrderPaid;
 use Shopper\Core\Models\Contracts\Order;
@@ -35,7 +35,16 @@ class Detail extends AbstractPageComponent implements HasActions, HasSchemas
     {
         $this->authorize('read_orders');
 
-        $this->order->load('customer', 'channel');
+        $this->order->load(
+            'items',
+            'customer',
+            'shippingAddress',
+            'billingAddress',
+            'shippingOption.carrier',
+            'shippings',
+            'channel',
+            'zone',
+        );
     }
 
     public function goToOrder(int $id): void
@@ -57,7 +66,7 @@ class Detail extends AbstractPageComponent implements HasActions, HasSchemas
                 $this->order->refresh();
                 $this->dispatch('order.updated');
 
-                event(new OrderCancelled($this->order));
+                event(new OrderCancel($this->order));
 
                 Notification::make()
                     ->title(__('shopper::pages/orders.notifications.cancelled'))

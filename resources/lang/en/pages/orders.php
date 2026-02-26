@@ -36,7 +36,6 @@ return [
     'shipping_type' => 'Shipping Type',
     'shipping_fee' => 'Shipping Fee',
     'shipping_tax' => 'Shipping Tax',
-    'tax' => 'Tax',
     'payment_actions' => 'Payment actions',
     'send_invoice' => 'Send invoice',
     'private_notes' => 'Private notes',

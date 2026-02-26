@@ -200,7 +200,7 @@ class CreateShippingLabel extends SlideOverComponent implements HasActions, HasF
                 'order_shipping_id' => $shipment->id,
             ]);
 
-        event(new OrderShipmentCreated($this->order, $shipment));
+        event(new OrderShipmentCreated($this->order));
 
         Notification::make()
             ->title(__('shopper::pages/orders.notifications.shipment_created'))
