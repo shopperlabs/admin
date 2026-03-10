@@ -1,8 +1,6 @@
 @php
     $carrier = $record->carrier;
-    $logoUrl = $carrier
-        ? ($carrier->logoUrl() ?? \Shopper\Shipping\Facades\Shipping::driver($carrier->driver ?? 'manual')->logo())
-        : null;
+    $logoUrl = $carrier?->logo();
 @endphp
 
 <div class="flex items-center gap-2">
