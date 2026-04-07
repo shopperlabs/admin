@@ -9,9 +9,9 @@ use Filament\Actions\BulkAction;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
 use Filament\Actions\DeleteBulkAction;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
@@ -24,11 +24,13 @@ use Mckenziearts\Icons\Untitledui\Enums\Untitledui;
 use Shopper\Core\Models\Contracts\Supplier as SupplierContract;
 use Shopper\Facades\Shopper;
 use Shopper\Livewire\Pages\AbstractPageComponent;
+use Shopper\Traits\HandlesAuthorizationExceptions;
 
-class Index extends AbstractPageComponent implements HasActions, HasForms, HasTable
+class Index extends AbstractPageComponent implements HasActions, HasSchemas, HasTable
 {
+    use HandlesAuthorizationExceptions;
     use InteractsWithActions;
-    use InteractsWithForms;
+    use InteractsWithSchemas;
     use InteractsWithTable;
 
     public function mount(): void
@@ -74,6 +76,7 @@ class Index extends AbstractPageComponent implements HasActions, HasForms, HasTa
                             arguments: ['supplier' => $record]
                         )
                     )
+                    ->authorize('edit_suppliers')
                     ->visible(Shopper::auth()->user()->can('edit_suppliers')),
                 Action::make('delete')
                     ->label(__('shopper::forms.actions.delete'))
@@ -83,6 +86,7 @@ class Index extends AbstractPageComponent implements HasActions, HasForms, HasTa
                     ->color('danger')
                     ->requiresConfirmation()
                     ->action(fn (SupplierContract $record) => $record->delete())
+                    ->authorize('delete_suppliers')
                     ->visible(Shopper::auth()->user()->can('delete_suppliers')),
             ])
             ->groupedBulkActions([
@@ -135,6 +139,7 @@ class Index extends AbstractPageComponent implements HasActions, HasForms, HasTa
                             ->success()
                             ->send();
                     })
+                    ->authorize('delete_suppliers')
                     ->visible(Shopper::auth()->user()->can('delete_suppliers'))
                     ->deselectRecordsAfterCompletion(),
             ])

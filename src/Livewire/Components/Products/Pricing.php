@@ -8,8 +8,8 @@ use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
 use Filament\Actions\DeleteAction;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
@@ -20,11 +20,13 @@ use Livewire\Attributes\On;
 use Livewire\Component;
 use Mckenziearts\Icons\Untitledui\Enums\Untitledui;
 use Shopper\Core\Models\Price;
+use Shopper\Traits\HandlesAuthorizationExceptions;
 
-class Pricing extends Component implements HasActions, HasForms, HasTable
+class Pricing extends Component implements HasActions, HasSchemas, HasTable
 {
+    use HandlesAuthorizationExceptions;
     use InteractsWithActions;
-    use InteractsWithForms;
+    use InteractsWithSchemas;
     use InteractsWithTable;
 
     public Model $model;
@@ -41,13 +43,13 @@ class Pricing extends Component implements HasActions, HasForms, HasTable
                     ->sortable(),
                 TextColumn::make('amount')
                     ->label(__('shopper::forms.label.price'))
-                    ->money(fn ($record) => $record->currencyCode),
+                    ->currency(fn ($record) => $record->currencyCode), // @phpstan-ignore method.notFound
                 TextColumn::make('compare_amount')
                     ->label(__('shopper::forms.label.compare_price'))
-                    ->money(fn ($record) => $record->currencyCode),
+                    ->currency(fn ($record) => $record->currencyCode), // @phpstan-ignore method.notFound
                 TextColumn::make('cost_amount')
                     ->label(__('shopper::forms.label.cost_per_item'))
-                    ->money(fn ($record) => $record->currencyCode),
+                    ->currency(fn ($record) => $record->currencyCode), // @phpstan-ignore method.notFound
             ])
             ->recordActions([
                 Action::make('edit')

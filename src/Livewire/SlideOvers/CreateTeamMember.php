@@ -10,29 +10,40 @@ use Filament\Actions\Contracts\HasActions;
 use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
+use Filament\Schemas\Components\Callout;
 use Filament\Schemas\Components\Utilities\Set;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
-use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Laravelcm\LivewireSlideOvers\SlideOverComponent;
 use Shopper\Components\Form\GenderField;
 use Shopper\Components\Section;
-use Shopper\Livewire\Components\SlideOverComponent;
+use Shopper\Contracts\SlideOverForm;
 use Shopper\Models\Contracts\ShopperUser;
 use Shopper\Models\Role;
 use Shopper\Notifications\AdminSendCredentials;
+use Shopper\Traits\HandlesAuthorizationExceptions;
+use Shopper\Traits\InteractsWithSlideOverForm;
 
 /**
  * @property-read Schema $form
  */
-class CreateTeamMember extends SlideOverComponent implements HasActions, HasForms
+class CreateTeamMember extends SlideOverComponent implements HasActions, HasSchemas, SlideOverForm
 {
+    use HandlesAuthorizationExceptions;
     use InteractsWithActions;
-    use InteractsWithForms;
+    use InteractsWithSchemas;
+    use InteractsWithSlideOverForm;
+
+    public string $action = 'store';
+
+    public ?string $title = null;
+
+    public ?string $description = null;
 
     /** @var array<string, mixed>|null */
     public ?array $data = [];
@@ -40,6 +51,8 @@ class CreateTeamMember extends SlideOverComponent implements HasActions, HasForm
     public function mount(): void
     {
         $this->authorize('view_users');
+
+        $this->title = __('shopper::pages/settings/staff.add_admin');
 
         $this->form->fill();
     }
@@ -97,6 +110,9 @@ class CreateTeamMember extends SlideOverComponent implements HasActions, HasForm
                             )
                             ->required(),
                     ]),
+                Callout::make(__('shopper::words.attention_needed'))
+                    ->description(__('shopper::words.attention_description', ['role' => config('shopper.admin.roles.admin')]))
+                    ->warning(),
             ])
             ->statePath('data');
     }
@@ -109,15 +125,15 @@ class CreateTeamMember extends SlideOverComponent implements HasActions, HasForm
         $userModel = config('auth.providers.users.model');
 
         /** @var ShopperUser $user */
-        $user = $userModel::create([
+        $user = $userModel::query()->create([
             'email' => $data['email'],
             'first_name' => $data['first_name'],
             'last_name' => $data['last_name'],
             'password' => Hash::make(
                 value: $data['password']
             ),
-            'phone_number' => $data['first_name'],
-            'gender' => $data['gender'],
+            'phone_number' => $data['phone_number'] ?? null,
+            'gender' => $data['gender'] ?? null,
             'email_verified_at' => now()->toDateTimeString(),
         ]);
 
@@ -138,11 +154,6 @@ class CreateTeamMember extends SlideOverComponent implements HasActions, HasForm
             ->success()
             ->send();
 
-        $this->dispatch('closePanel');
-    }
-
-    public function render(): View
-    {
-        return view('shopper::livewire.slide-overs.create-team-member');
+        $this->closePanel();
     }
 }

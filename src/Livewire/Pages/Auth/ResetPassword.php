@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Shopper\Livewire\Pages\Auth;
 
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
 use Illuminate\Auth\Passwords\PasswordBroker;
 use Illuminate\Contracts\View\View;
@@ -16,15 +16,16 @@ use Illuminate\Validation\Rules\Password as PasswordRule;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
+use Shopper\Contracts\HasStoreAuthentication;
 use Shopper\Facades\Shopper;
 
 /**
  * @property-read Schema $form
  */
 #[Layout('shopper::components.layouts.base')]
-final class ResetPassword extends Component implements HasForms
+final class ResetPassword extends Component implements HasSchemas
 {
-    use InteractsWithForms;
+    use InteractsWithSchemas;
 
     /** @var array<string, mixed>|null */
     public ?array $data = [];
@@ -90,12 +91,21 @@ final class ResetPassword extends Component implements HasForms
                 $user->password = Hash::make($password);
                 $user->save();
 
+                if (config('shopper.auth.2fa_enabled')
+                    && $user instanceof HasStoreAuthentication
+                    && $user->getStoreAuthenticationSecret()) {
+
+                    return;
+                }
+
                 Shopper::auth()->login($user);
             }
         );
 
         if ($response === Password::PASSWORD_RESET) {
-            $this->redirectRoute('shopper.dashboard');
+            session()->flash('success', trans($response));
+
+            $this->redirectRoute('shopper.login');
         }
 
         $this->addError('data.email', trans($response));

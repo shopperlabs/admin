@@ -10,41 +10,51 @@ use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Repeater\TableColumn;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\View;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
-use Illuminate\Contracts\View\View as ViewContract;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\HtmlString;
+use Laravelcm\LivewireSlideOvers\SlideOverComponent;
 use Livewire\Attributes\Computed;
+use Shopper\Contracts\SlideOverForm;
 use Shopper\Core\Enum\FulfillmentStatus;
 use Shopper\Core\Enum\ShipmentStatus;
 use Shopper\Core\Events\Orders\OrderShipmentCreated;
 use Shopper\Core\Models\Contracts\Order;
 use Shopper\Core\Models\OrderItem;
 use Shopper\Core\Models\OrderShipping;
-use Shopper\Livewire\Components\SlideOverComponent;
 use Shopper\Shipping\Services\CarrierRateService;
+use Shopper\Traits\HandlesAuthorizationExceptions;
+use Shopper\Traits\InteractsWithSlideOverForm;
 
 /**
  * @property-read Schema $form
  * @property-read Collection<int, OrderItem> $unfulfilledItems
  */
-class CreateShippingLabel extends SlideOverComponent implements HasActions, HasForms
+class CreateShippingLabel extends SlideOverComponent implements HasActions, HasSchemas, SlideOverForm
 {
+    use HandlesAuthorizationExceptions;
     use InteractsWithActions;
-    use InteractsWithForms;
+    use InteractsWithSchemas;
+    use InteractsWithSlideOverForm;
 
     public Order $order;
 
     /** @var array<string, mixed>|null */
     public ?array $data = [];
+
+    public string $action = 'save';
+
+    public ?string $title = null;
+
+    public ?string $description = null;
 
     public static function panelMaxWidth(): string
     {
@@ -54,6 +64,8 @@ class CreateShippingLabel extends SlideOverComponent implements HasActions, HasF
     public function mount(): void
     {
         $this->authorize('edit_orders');
+
+        $this->title = __('shopper::pages/orders.create_shipping_label');
 
         $this->form->fill([
             'carrier_id' => $this->order->shippingOption?->carrier_id,
@@ -206,11 +218,6 @@ class CreateShippingLabel extends SlideOverComponent implements HasActions, HasF
             ->send();
 
         $this->dispatch('order.shipping.created');
-        $this->dispatch('closePanel');
-    }
-
-    public function render(): ViewContract
-    {
-        return view('shopper::livewire.slide-overs.create-shipping-label');
+        $this->closePanel();
     }
 }

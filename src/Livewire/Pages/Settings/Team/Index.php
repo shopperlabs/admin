@@ -11,9 +11,9 @@ use Filament\Actions\Contracts\HasActions;
 use Filament\Actions\DeleteAction;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Support\Enums\Size;
 use Filament\Support\Enums\Width;
 use Filament\Tables\Columns\TextColumn;
@@ -28,12 +28,14 @@ use Livewire\Component;
 use Mckenziearts\Icons\Untitledui\Enums\Untitledui;
 use Shopper\Models\Contracts\ShopperUser;
 use Shopper\Models\Role;
+use Shopper\Traits\HandlesAuthorizationExceptions;
 
 #[Layout('shopper::components.layouts.setting')]
-class Index extends Component implements HasActions, HasForms, HasTable
+class Index extends Component implements HasActions, HasSchemas, HasTable
 {
+    use HandlesAuthorizationExceptions;
     use InteractsWithActions;
-    use InteractsWithForms;
+    use InteractsWithSchemas;
     use InteractsWithTable;
 
     public function createRoleAction(): Action

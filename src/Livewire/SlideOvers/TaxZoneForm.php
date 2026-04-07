@@ -10,25 +10,27 @@ use Filament\Forms\Components\KeyValue;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
+use Laravelcm\LivewireSlideOvers\SlideOverComponent;
 use Shopper\Components\Separator;
 use Shopper\Contracts\SlideOverForm;
 use Shopper\Core\Models\Country;
 use Shopper\Core\Models\TaxProvider;
 use Shopper\Core\Models\TaxZone;
-use Shopper\Livewire\Components\SlideOverComponent;
+use Shopper\Traits\HandlesAuthorizationExceptions;
 use Shopper\Traits\InteractsWithSlideOverForm;
 
 /**
  * @property-read Schema $form
  */
-class TaxZoneForm extends SlideOverComponent implements HasActions, HasForms, SlideOverForm
+class TaxZoneForm extends SlideOverComponent implements HasActions, HasSchemas, SlideOverForm
 {
+    use HandlesAuthorizationExceptions;
     use InteractsWithActions;
-    use InteractsWithForms;
+    use InteractsWithSchemas;
     use InteractsWithSlideOverForm;
 
     public ?TaxZone $taxZone = null;

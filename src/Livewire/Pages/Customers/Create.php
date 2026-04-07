@@ -10,10 +10,10 @@ use Filament\Actions\Contracts\HasActions;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Utilities\Set;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Arr;
@@ -32,14 +32,16 @@ use Shopper\Core\Models\Country;
 use Shopper\Livewire\Pages\AbstractPageComponent;
 use Shopper\Models\Contracts\ShopperUser;
 use Shopper\Notifications\CustomerSendCredentials;
+use Shopper\Traits\HandlesAuthorizationExceptions;
 
 /**
  * @property-read Schema $form
  */
-class Create extends AbstractPageComponent implements HasActions, HasForms
+class Create extends AbstractPageComponent implements HasActions, HasSchemas
 {
+    use HandlesAuthorizationExceptions;
     use InteractsWithActions;
-    use InteractsWithForms;
+    use InteractsWithSchemas;
 
     /** @var array<string, mixed>|null */
     public ?array $data = [];

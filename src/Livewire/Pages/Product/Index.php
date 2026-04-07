@@ -8,8 +8,8 @@ use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Support\Enums\Width;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\SpatieMediaLibraryImageColumn;
@@ -35,11 +35,13 @@ use Shopper\Core\Models\Contracts\Product;
 use Shopper\Core\Models\Contracts\ProductVariant;
 use Shopper\Feature;
 use Shopper\Livewire\Pages\AbstractPageComponent;
+use Shopper\Traits\HandlesAuthorizationExceptions;
 
-class Index extends AbstractPageComponent implements HasActions, HasForms, HasTable
+class Index extends AbstractPageComponent implements HasActions, HasSchemas, HasTable
 {
+    use HandlesAuthorizationExceptions;
     use InteractsWithActions;
-    use InteractsWithForms;
+    use InteractsWithSchemas;
     use InteractsWithTable {
         InteractsWithTable::getTableRecords as private baseGetTableRecords;
     }
@@ -145,6 +147,7 @@ class Index extends AbstractPageComponent implements HasActions, HasForms, HasTa
                             parameters: ['product' => $record],
                             navigate: true
                         ))
+                        ->authorize('edit_products')
                         ->visible(shopper()->auth()->user()->can('edit_products')),
                     Action::make(__('shopper::forms.actions.delete'))
                         ->icon(Untitledui::Trash03)
@@ -156,6 +159,7 @@ class Index extends AbstractPageComponent implements HasActions, HasForms, HasTa
 
                             $record->delete();
                         })
+                        ->authorize('delete_products')
                         ->visible(shopper()->auth()->user()->can('delete_products')),
                 ])
                     ->tooltip('Actions'),

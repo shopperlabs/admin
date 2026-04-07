@@ -6,35 +6,45 @@ namespace Shopper\Livewire\SlideOvers;
 
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
-use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Laravelcm\LivewireSlideOvers\SlideOverComponent;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
 use Shopper\Actions\Store\Product\SavePricingAction;
 use Shopper\Components\Form\CurrenciesField;
+use Shopper\Contracts\SlideOverForm;
 use Shopper\Core\Contracts\Priceable;
 use Shopper\Core\Models\Currency;
-use Shopper\Livewire\Components\SlideOverComponent;
+use Shopper\Traits\HandlesAuthorizationExceptions;
+use Shopper\Traits\InteractsWithSlideOverForm;
 
 /**
  * @property-read Schema $form
  * @property-read Collection<int, Currency> $currencies
  */
-class ManagePricing extends SlideOverComponent implements HasActions, HasForms
+class ManagePricing extends SlideOverComponent implements HasActions, HasSchemas, SlideOverForm
 {
+    use HandlesAuthorizationExceptions;
     use InteractsWithActions;
-    use InteractsWithForms;
+    use InteractsWithSchemas;
+    use InteractsWithSlideOverForm;
 
     /** @var (Model&Priceable<Model>) */
     public Model&Priceable $model;
 
     #[Locked]
     public ?int $currencyId = null;
+
+    public string $action = 'save';
+
+    public ?string $title = null;
+
+    public ?string $description = null;
 
     /** @var array<string, mixed>|null */
     public ?array $data = [];
@@ -52,6 +62,7 @@ class ManagePricing extends SlideOverComponent implements HasActions, HasForms
         $this->authorize('edit_products');
 
         $this->model = $modelType::with('prices')->find($modelId);
+        $this->title = __('shopper::pages/products.pricing.title');
         $this->currencyId = $currencyId;
 
         $this->form->fill($this->getModelPrices());
@@ -104,11 +115,6 @@ class ManagePricing extends SlideOverComponent implements HasActions, HasForms
         $this->closePanel();
     }
 
-    public function render(): View
-    {
-        return view('shopper::livewire.slide-overs.add-pricing');
-    }
-
     /**
      * @return array<array-key, array<string, mixed>>
      */
@@ -123,7 +129,7 @@ class ManagePricing extends SlideOverComponent implements HasActions, HasForms
                 [
                     'amount' => $price->amount,
                     'compare_amount' => $price->compare_amount === 0 ? null : $price->compare_amount,
-                    'cost_amount' => $price->cost_amount === 0 ? null : $price->compare_amount,
+                    'cost_amount' => $price->cost_amount === 0 ? null : $price->cost_amount,
                 ]
             );
         }

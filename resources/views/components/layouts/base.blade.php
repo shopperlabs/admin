@@ -71,6 +71,12 @@
             loadDarkMode()
 
             document.addEventListener('livewire:navigated', loadDarkMode)
+
+            // Pre-apply sidebar collapsed state from localStorage before Alpine initialises
+            // — prevents the width flash caused by CSS transitions firing on first render
+            if (localStorage.getItem('sidebar-is-collapsed') === 'true') {
+                document.documentElement.classList.add('sidebar-collapsed')
+            }
         </script>
     </head>
     <body
@@ -83,7 +89,7 @@
         {{ $slot }}
 
         @livewire(\Filament\Notifications\Livewire\Notifications::class)
-        @livewire(\Shopper\Livewire\Components\SlideOverPanel::class)
+        @livewire('slide-over-panel')
 
         @filamentScripts
 

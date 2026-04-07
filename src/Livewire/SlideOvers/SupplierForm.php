@@ -12,26 +12,36 @@ use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Utilities\Set;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
-use Illuminate\Contracts\View\View;
 use Illuminate\Support\Str;
+use Laravelcm\LivewireSlideOvers\SlideOverComponent;
 use Shopper\Components\Section;
+use Shopper\Contracts\SlideOverForm;
 use Shopper\Core\Models\Contracts\Supplier;
-use Shopper\Livewire\Components\SlideOverComponent;
+use Shopper\Traits\HandlesAuthorizationExceptions;
+use Shopper\Traits\InteractsWithSlideOverForm;
 
 /**
  * @property-read Schema $form
  */
-class SupplierForm extends SlideOverComponent implements HasActions, HasForms
+class SupplierForm extends SlideOverComponent implements HasActions, HasSchemas, SlideOverForm
 {
+    use HandlesAuthorizationExceptions;
     use InteractsWithActions;
-    use InteractsWithForms;
+    use InteractsWithSchemas;
+    use InteractsWithSlideOverForm;
 
     public Supplier $supplier;
+
+    public string $action = 'save';
+
+    public ?string $title = null;
+
+    public ?string $description = null;
 
     /** @var array<array-key, mixed>|null */
     public ?array $data = [];
@@ -39,6 +49,10 @@ class SupplierForm extends SlideOverComponent implements HasActions, HasForms
     public function mount(?Supplier $supplier = null): void
     {
         $this->supplier = $supplier ?? resolve(Supplier::class)::query()->newModelInstance();
+
+        $this->title = $this->supplier->id
+            ? $this->supplier->name
+            : __('shopper::forms.actions.add_label', ['label' => __('shopper::pages/suppliers.single')]);
 
         $this->form->fill($this->supplier->toArray());
     }
@@ -124,10 +138,5 @@ class SupplierForm extends SlideOverComponent implements HasActions, HasForms
             name: 'shopper.suppliers.index',
             navigate: true,
         );
-    }
-
-    public function render(): View
-    {
-        return view('shopper::livewire.slide-overs.supplier-form');
     }
 }

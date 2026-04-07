@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace Shopper\Livewire\Pages\Auth;
 
+use DanHarrin\LivewireRateLimiting\Exceptions\TooManyRequestsException;
+use DanHarrin\LivewireRateLimiting\WithRateLimiting;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
 use Illuminate\Auth\Passwords\PasswordBroker;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Shopper\Notifications\AdminResetPassword;
@@ -19,9 +22,10 @@ use Shopper\Notifications\AdminResetPassword;
  * @property-read Schema $form
  */
 #[Layout('shopper::components.layouts.base')]
-final class ForgotPassword extends Component implements HasForms
+final class ForgotPassword extends Component implements HasSchemas
 {
-    use InteractsWithForms;
+    use InteractsWithSchemas;
+    use WithRateLimiting;
 
     /** @var array<string, mixed>|null */
     public ?array $data = [];
@@ -47,6 +51,17 @@ final class ForgotPassword extends Component implements HasForms
 
     public function sendResetPasswordLink(): void
     {
+        [$throwable] = useTryCatch(fn () => $this->rateLimit(3, 300));
+
+        if ($throwable instanceof TooManyRequestsException) {
+            throw ValidationException::withMessages([
+                'data.email' => __('shopper::pages/auth.login.throttled', [
+                    'seconds' => $throwable->secondsUntilAvailable,
+                    'minutes' => ceil($throwable->secondsUntilAvailable / 60),
+                ]),
+            ]);
+        }
+
         $data = $this->form->getState();
 
         $response = $this->broker()->sendResetLink(

@@ -10,40 +10,50 @@ use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
-use Illuminate\Contracts\View\View;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\HtmlString;
+use Laravelcm\LivewireSlideOvers\SlideOverComponent;
 use Livewire\Attributes\Computed;
 use Shopper\Components\Form\ShippingField;
 use Shopper\Components\Separator;
+use Shopper\Contracts\SlideOverForm;
 use Shopper\Core\Models\AttributeValue;
 use Shopper\Core\Models\Contracts\Product;
 use Shopper\Core\Models\Contracts\ProductVariant;
 use Shopper\Helpers\MapProductOptions;
-use Shopper\Livewire\Components\SlideOverComponent;
+use Shopper\Traits\HandlesAuthorizationExceptions;
+use Shopper\Traits\InteractsWithSlideOverForm;
 
 /**
  * @property-read Schema $form
  * @property-read Collection<string, mixed> $options
  * @property-read array<array-key, mixed> $variantsOptions
  */
-class UpdateVariant extends SlideOverComponent implements HasActions, HasForms
+class UpdateVariant extends SlideOverComponent implements HasActions, HasSchemas, SlideOverForm
 {
+    use HandlesAuthorizationExceptions;
     use InteractsWithActions;
-    use InteractsWithForms;
+    use InteractsWithSchemas;
+    use InteractsWithSlideOverForm;
 
     public ?ProductVariant $variant = null;
 
     public ?Product $product = null;
+
+    public string $action = 'save';
+
+    public ?string $title = null;
+
+    public ?string $description = null;
 
     /** @var array<string, mixed>|null */
     public ?array $data = [];
@@ -53,6 +63,8 @@ class UpdateVariant extends SlideOverComponent implements HasActions, HasForms
     public function mount(): void
     {
         $this->authorize('edit_product_variants');
+
+        $this->title = $this->variant?->name;
 
         $this->variant?->load(['values', 'values.attribute']);
 
@@ -188,11 +200,6 @@ class UpdateVariant extends SlideOverComponent implements HasActions, HasForms
             ->reject(fn ($value): bool => array_diff($value, $this->variant?->values->pluck('id')->toArray() ?? []) === [])
             ->values()
             ->toArray();
-    }
-
-    public function render(): View
-    {
-        return view('shopper::livewire.slide-overs.update-variant');
     }
 
     /**

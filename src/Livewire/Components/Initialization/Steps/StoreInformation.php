@@ -7,13 +7,12 @@ namespace Shopper\Livewire\Components\Initialization\Steps;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
@@ -27,10 +26,10 @@ use Spatie\LivewireWizard\Components\StepComponent;
 /**
  * @property-read Schema $form
  */
-final class StoreInformation extends StepComponent implements HasActions, HasForms
+final class StoreInformation extends StepComponent implements HasActions, HasSchemas
 {
     use InteractsWithActions;
-    use InteractsWithForms;
+    use InteractsWithSchemas;
     use SaveSettings;
 
     /** @var array<string, mixed>|null */
@@ -42,7 +41,6 @@ final class StoreInformation extends StepComponent implements HasActions, HasFor
         $settings = Setting::query()->whereIn('key', [
             'name',
             'email',
-            'about',
             'country_id',
             'default_currency_id',
             'currencies',
@@ -113,10 +111,6 @@ final class StoreInformation extends StepComponent implements HasActions, HasFor
                     )
                     ->native(false)
                     ->required(),
-                Textarea::make('about')
-                    ->label(__('shopper::forms.label.about'))
-                    ->helperText(__('shopper::pages/onboarding.about_description'))
-                    ->rows(3),
             ])
             ->statePath('data');
     }

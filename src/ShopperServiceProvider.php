@@ -15,6 +15,10 @@ use Filament\Support\Facades\FilamentColor;
 use Filament\Tables\Columns\Column;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Contracts\Debug\ExceptionHandler;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Livewire\Livewire;
 use PragmaRX\Google2FA\Google2FA;
 use Shopper\Concerns\TwoFactorAuthenticationProvider;
@@ -34,6 +38,7 @@ use Shopper\Settings\SettingManager;
 use Shopper\Traits\LoadComponents;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 final class ShopperServiceProvider extends PackageServiceProvider
 {
@@ -64,6 +69,9 @@ final class ShopperServiceProvider extends PackageServiceProvider
             ->hasCommands([
                 Console\ComponentPublishCommand::class,
                 Console\InstallCommand::class,
+                Console\KitExportCommand::class,
+                Console\KitInitCommand::class,
+                Console\KitInstallCommand::class,
                 Console\PublishCommand::class,
                 Console\MakePageCommand::class,
                 Console\MakeShopperPageCommand::class,
@@ -77,6 +85,7 @@ final class ShopperServiceProvider extends PackageServiceProvider
         $this->bootLivewireComponents();
         $this->bootAddons();
         $this->registerCustomFilamentItems();
+        $this->registerErrorPages();
 
         Shopper::serving(function (): void {
             Shopper::setServingStatus();
@@ -85,6 +94,8 @@ final class ShopperServiceProvider extends PackageServiceProvider
 
     public function packageRegistered(): void
     {
+        $this->app['config']->set('livewire-slide-over.include_js', false);
+
         $this->registerConfigFiles();
         $this->registerDatabase();
 
@@ -105,6 +116,30 @@ final class ShopperServiceProvider extends PackageServiceProvider
         ));
 
         $this->loadViewsFrom($this->root.'/resources/views', 'shopper');
+    }
+
+    protected function registerErrorPages(): void
+    {
+        $this->callAfterResolving(
+            ExceptionHandler::class,
+            function (ExceptionHandler $handler): void {
+                $handler->renderable(function (HttpException $e, Request $request): mixed {
+                    if ($e->getStatusCode() === 403 && $this->isShopperRequest($request) && ! $request->is('*/forbidden')) {
+                        return new RedirectResponse(route('shopper.forbidden'));
+                    }
+
+                    return null;
+                });
+
+                $handler->renderable(function (AuthorizationException $e, Request $request): mixed {
+                    if ($this->isShopperRequest($request) && ! $request->is('*/forbidden')) {
+                        return new RedirectResponse(route('shopper.forbidden'));
+                    }
+
+                    return null;
+                });
+            }
+        );
     }
 
     protected function bootAddons(): void
@@ -176,7 +211,7 @@ final class ShopperServiceProvider extends PackageServiceProvider
     protected function registerCustomFilamentItems(): void
     {
         FilamentColor::register([
-            'primary' => config('shopper.admin.filament_color'),
+            'primary' => config('shopper.admin.primary_color'),
             'teal' => Color::Teal,
             'green' => Color::Green,
             'sky' => Color::Sky,
@@ -240,5 +275,12 @@ final class ShopperServiceProvider extends PackageServiceProvider
         ImageEntry::configureUsing(
             fn (ImageEntry $imageEntry): ImageEntry => $imageEntry->visibility('public')
         );
+    }
+
+    private function isShopperRequest(Request $request): bool
+    {
+        $prefix = shopper()->prefix();
+
+        return $request->is($prefix) || $request->is($prefix.'/*');
     }
 }

@@ -29,7 +29,7 @@
     $isError = $isFailed || $isReturned;
 @endphp
 
-<div class="flex h-full flex-col divide-y divide-gray-200 dark:divide-white/10">
+<x-shopper::slideover-card class="divide-y divide-gray-200 dark:divide-white/10">
     <div class="h-0 flex-1 overflow-y-auto py-4">
         <div class="px-4">
             <div class="flex items-start justify-between">
@@ -68,17 +68,7 @@
                         </span>
                     </p>
                 </div>
-                <div class="ml-3 flex h-7 items-center gap-2">
-                    <x-shopper::escape />
-                    <button
-                        type="button"
-                        class="rounded-md bg-white text-gray-400 outline-none hover:text-gray-500 dark:bg-gray-900 dark:text-gray-500 dark:hover:text-gray-300"
-                        wire:click="$dispatch('closePanel')"
-                    >
-                        <span class="sr-only">Close panel</span>
-                        <x-untitledui-x class="size-6" stroke-width="1.5" aria-hidden="true" />
-                    </button>
-                </div>
+                <x-livewire-slide-over::close-icon />
             </div>
 
             @if ($shippingAddress || $carrier)
@@ -289,12 +279,4 @@
             </div>
         </div>
     </div>
-
-    @if ($this->shipment->canBeDelivered())
-        <div class="flex shrink-0 justify-end gap-3 p-4">
-            {{ $this->markDeliveredAction }}
-        </div>
-    @endif
-
-    <x-filament-actions::modals />
-</div>
+</x-shopper::slideover-card>

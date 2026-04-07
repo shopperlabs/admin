@@ -13,22 +13,23 @@ use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
-use Illuminate\Contracts\View\View;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
+use Laravelcm\LivewireSlideOvers\SlideOverComponent;
 use Shopper\Actions\Store\SaveAndDispatchDiscountAction;
 use Shopper\Components\Separator;
+use Shopper\Contracts\SlideOverForm;
 use Shopper\Core\Enum\DiscountApplyTo;
 use Shopper\Core\Enum\DiscountCondition;
 use Shopper\Core\Enum\DiscountEligibility;
@@ -37,17 +38,26 @@ use Shopper\Core\Enum\DiscountType;
 use Shopper\Core\Models\Contracts\Product;
 use Shopper\Core\Models\Discount;
 use Shopper\Core\Models\Zone;
-use Shopper\Livewire\Components\SlideOverComponent;
+use Shopper\Traits\HandlesAuthorizationExceptions;
+use Shopper\Traits\InteractsWithSlideOverForm;
 
 /**
  * @property-read Schema $form
  */
-class DiscountForm extends SlideOverComponent implements HasActions, HasForms
+class DiscountForm extends SlideOverComponent implements HasActions, HasSchemas, SlideOverForm
 {
+    use HandlesAuthorizationExceptions;
     use InteractsWithActions;
-    use InteractsWithForms;
+    use InteractsWithSchemas;
+    use InteractsWithSlideOverForm;
 
     public Discount $discount;
+
+    public string $action = 'store';
+
+    public ?string $title = null;
+
+    public ?string $description = null;
 
     /**
      * @var array<string, mixed>|null
@@ -61,37 +71,32 @@ class DiscountForm extends SlideOverComponent implements HasActions, HasForms
 
     public function mount(?int $discountId = null): void
     {
-        abort_unless($this->authorize('add_discounts') || $this->authorize('edit_discounts'), 403);
+        $user = shopper()->auth()->user();
+
+        abort_unless($user->can('add_discounts') || $user->can('edit_discounts'), 403);
 
         $this->discount = $discountId
             ? Discount::query()->find($discountId)
             : new Discount;
 
+        $this->title = $this->discount->id
+            ? $this->discount->code
+            : __('shopper::forms.actions.add_label', ['label' => __('shopper::pages/discounts.single')]);
+        $this->description = __('shopper::pages/discounts.description');
+
         $products = collect();
         $customers = collect();
 
         if ($discountId) {
-            if ($this->discount->items()->where('condition', DiscountCondition::Eligibility)->exists()) {
-                $customerConditions = $this->discount->items()
-                    ->with('discountable')
-                    ->where('condition', DiscountCondition::Eligibility)
-                    ->get();
+            $items = $this->discount->items()->with('discountable')->get();
 
-                foreach ($customerConditions as $customerCondition) {
-                    $customers->push($customerCondition->discountable);
-                }
-            }
+            $customers = $items->where('condition', DiscountCondition::Eligibility)
+                ->map(fn ($item) => $item->discountable)
+                ->filter();
 
-            if ($this->discount->items()->where('condition', DiscountCondition::ApplyTo)->exists()) {
-                $productConditions = $this->discount->items()
-                    ->with('discountable')
-                    ->where('condition', DiscountCondition::ApplyTo)
-                    ->get();
-
-                foreach ($productConditions as $productCondition) {
-                    $products->push($productCondition->discountable);
-                }
-            }
+            $products = $items->where('condition', DiscountCondition::ApplyTo)
+                ->map(fn ($item) => $item->discountable)
+                ->filter();
         }
 
         $this->form->fill(array_merge(
@@ -155,6 +160,25 @@ class DiscountForm extends SlideOverComponent implements HasActions, HasForms
                                             default => null
                                         }
                                     )
+                                    ->afterStateHydrated(function (TextInput $component, $state): void {
+                                        if ($this->discount->exists && $this->discount->type === DiscountType::FixedAmount && $state) {
+                                            $currency = $this->discount->zone?->currency_code ?? shopper_currency(); // @phpstan-ignore nullsafe.neverNull
+                                            $component->state(
+                                                is_no_division_currency($currency) ? $state : $state / 100
+                                            );
+                                        }
+                                    })
+                                    ->dehydrateStateUsing(function (Get $get, $state) {
+                                        if ($get('type') !== DiscountType::FixedAmount->value) {
+                                            return (int) $state;
+                                        }
+
+                                        $currency = $get('zone_id')
+                                            ? Zone::query()->find($get('zone_id'))->currency_code
+                                            : shopper_currency();
+
+                                        return is_no_division_currency($currency) ? (int) $state : (int) round((float) $state * 100);
+                                    })
                                     ->numeric()
                                     ->required(),
                             ]),
@@ -225,14 +249,21 @@ class DiscountForm extends SlideOverComponent implements HasActions, HasForms
                             ->live(),
                         Select::make('products')
                             ->label(__('shopper::pages/discounts.select_products'))
-                            ->options(
-                                resolve(Product::class)::query()
+                            ->getSearchResultsUsing(
+                                fn (string $search): array => resolve(Product::class)::query()
                                     ->scopes('publish')
-                                    ->get()
+                                    ->where('name', 'like', "%{$search}%")
+                                    ->limit(10)
                                     ->pluck('name', 'id')
+                                    ->all()
+                            )
+                            ->getOptionLabelsUsing(
+                                fn (array $values): array => resolve(Product::class)::query()
+                                    ->whereIn('id', $values)
+                                    ->pluck('name', 'id')
+                                    ->all()
                             )
                             ->multiple()
-                            ->preload()
                             ->searchable()
                             ->optionsLimit(10)
                             ->minItems(1)
@@ -250,14 +281,26 @@ class DiscountForm extends SlideOverComponent implements HasActions, HasForms
                             ->live(),
                         Select::make('customers')
                             ->label(__('shopper::pages/discounts.select_customers'))
-                            ->options(
-                                config('auth.providers.users.model')::query()
+                            ->getSearchResultsUsing(
+                                fn (string $search): array => config('auth.providers.users.model')::query()
                                     ->scopes('customers')
+                                    ->where(fn ($q) => $q
+                                        ->where('first_name', 'like', "%{$search}%")
+                                        ->orWhere('last_name', 'like', "%{$search}%")
+                                        ->orWhere('email', 'like', "%{$search}%"))
+                                    ->limit(10)
                                     ->get()
                                     ->pluck('full_name', 'id')
+                                    ->all()
+                            )
+                            ->getOptionLabelsUsing(
+                                fn (array $values): array => config('auth.providers.users.model')::query()
+                                    ->whereIn('id', $values)
+                                    ->get()
+                                    ->pluck('full_name', 'id')
+                                    ->all()
                             )
                             ->multiple()
-                            ->preload()
                             ->searchable()
                             ->optionsLimit(10)
                             ->minItems(1)
@@ -285,6 +328,25 @@ class DiscountForm extends SlideOverComponent implements HasActions, HasForms
                                     default => null
                                 }
                             )
+                            ->afterStateHydrated(function (TextInput $component, $state): void {
+                                if ($this->discount->exists && $this->discount->min_required === DiscountRequirement::Price->value && $state) {
+                                    $currency = $this->discount->zone?->currency_code ?? shopper_currency(); // @phpstan-ignore nullsafe.neverNull
+                                    $component->state(
+                                        is_no_division_currency($currency) ? $state : (string) ((int) $state / 100)
+                                    );
+                                }
+                            })
+                            ->dehydrateStateUsing(function (Get $get, $state) {
+                                if ($get('min_required') !== DiscountRequirement::Price->value) {
+                                    return $state;
+                                }
+
+                                $currency = $get('zone_id')
+                                    ? Zone::query()->find($get('zone_id'))->currency_code
+                                    : shopper_currency();
+
+                                return is_no_division_currency($currency) ? (string) (int) $state : (string) ((int) round((float) $state * 100));
+                            })
                             ->required(
                                 fn (Get $get): bool => $get('min_required') !== DiscountRequirement::None->value
                             )
@@ -308,6 +370,8 @@ class DiscountForm extends SlideOverComponent implements HasActions, HasForms
 
     public function store(): void
     {
+        $this->authorize($this->discount->id ? 'edit_discounts' : 'add_discounts');
+
         $data = $this->form->getState();
         $discountFormValues = Arr::except($data, ['products', 'customers', 'usage_number']);
 
@@ -327,10 +391,5 @@ class DiscountForm extends SlideOverComponent implements HasActions, HasForms
             name: 'shopper.discounts.index',
             navigate: true,
         );
-    }
-
-    public function render(): View
-    {
-        return view('shopper::livewire.slide-overs.discount-form');
     }
 }

@@ -11,28 +11,38 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Utilities\Set;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
-use Illuminate\Contracts\View\View;
 use Illuminate\Support\Str;
+use Laravelcm\LivewireSlideOvers\SlideOverComponent;
 use Shopper\Components\Form\IconPicker;
 use Shopper\Components\Separator;
+use Shopper\Contracts\SlideOverForm;
 use Shopper\Core\Enum\FieldType;
 use Shopper\Core\Models\Attribute;
-use Shopper\Livewire\Components\SlideOverComponent;
+use Shopper\Traits\HandlesAuthorizationExceptions;
+use Shopper\Traits\InteractsWithSlideOverForm;
 
 /**
  * @property-read Schema $form
  */
-class AttributeForm extends SlideOverComponent implements HasActions, HasForms
+class AttributeForm extends SlideOverComponent implements HasActions, HasSchemas, SlideOverForm
 {
+    use HandlesAuthorizationExceptions;
     use InteractsWithActions;
-    use InteractsWithForms;
+    use InteractsWithSchemas;
+    use InteractsWithSlideOverForm;
 
     public ?Attribute $attribute = null;
+
+    public string $action = 'store';
+
+    public ?string $title = null;
+
+    public ?string $description = null;
 
     /**
      * @var array<string, mixed>|null
@@ -44,6 +54,10 @@ class AttributeForm extends SlideOverComponent implements HasActions, HasForms
         abort_unless($this->authorize('add_attributes') || $this->authorize('edit_attributes'), 403);
 
         $this->attribute = Attribute::query()->find($attributeId);
+
+        $this->title = $this->attribute
+            ? $this->attribute->name
+            : __('shopper::forms.actions.add_label', ['label' => __('shopper::pages/attributes.single')]);
 
         $this->form->fill($this->attribute?->toArray());
     }
@@ -113,10 +127,5 @@ class AttributeForm extends SlideOverComponent implements HasActions, HasForms
         $this->closePanel();
 
         $this->redirect(route('shopper.attributes.index'), navigate: true);
-    }
-
-    public function render(): View
-    {
-        return view('shopper::livewire.slide-overs.attribute-form');
     }
 }

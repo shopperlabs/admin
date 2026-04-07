@@ -11,28 +11,38 @@ use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
-use Illuminate\Contracts\View\View;
 use Illuminate\Validation\ValidationException;
+use Laravelcm\LivewireSlideOvers\SlideOverComponent;
+use Shopper\Contracts\SlideOverForm;
 use Shopper\Core\Enum\Operator;
 use Shopper\Core\Enum\Rule;
 use Shopper\Core\Jobs\SyncCollectionProductsJob;
 use Shopper\Core\Models\Contracts\Collection;
-use Shopper\Livewire\Components\SlideOverComponent;
+use Shopper\Traits\HandlesAuthorizationExceptions;
+use Shopper\Traits\InteractsWithSlideOverForm;
 
 /**
  * @property-read Schema $form
  */
-class CollectionRules extends SlideOverComponent implements HasActions, HasForms
+class CollectionRules extends SlideOverComponent implements HasActions, HasSchemas, SlideOverForm
 {
+    use HandlesAuthorizationExceptions;
     use InteractsWithActions;
-    use InteractsWithForms;
+    use InteractsWithSchemas;
+    use InteractsWithSlideOverForm;
 
     public Collection $collection;
+
+    public string $action = 'store';
+
+    public ?string $title = null;
+
+    public ?string $description = null;
 
     /** @var array<string, mixed>|null */
     public ?array $data = [];
@@ -45,6 +55,9 @@ class CollectionRules extends SlideOverComponent implements HasActions, HasForms
     public function mount(): void
     {
         $this->authorize('edit_collections');
+
+        $this->title = __('shopper::pages/collections.product_conditions');
+        $this->description = __('shopper::pages/collections.automatic_description');
 
         $this->form->fill($this->collection->toArray());
     }
@@ -68,7 +81,10 @@ class CollectionRules extends SlideOverComponent implements HasActions, HasForms
                         $rule = Rule::tryFrom($data['rule'] ?? '');
 
                         if ($rule?->isPrice() && isset($data['value'])) {
-                            $data['value'] = (string) ((int) $data['value'] / 100);
+                            $currency = shopper_currency();
+                            $data['value'] = is_no_division_currency($currency)
+                                ? $data['value']
+                                : (string) ((int) $data['value'] / 100);
                         } elseif ($rule?->isBoolean() && isset($data['value'])) {
                             $data['boolean_value'] = $data['value'];
                         } elseif ($rule?->isDate() && isset($data['value'])) {
@@ -138,11 +154,6 @@ class CollectionRules extends SlideOverComponent implements HasActions, HasForms
             ->send();
     }
 
-    public function render(): View
-    {
-        return view('shopper::livewire.slide-overs.collection-rules');
-    }
-
     /**
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>
@@ -168,7 +179,10 @@ class CollectionRules extends SlideOverComponent implements HasActions, HasForms
         }
 
         if ($rule?->isPrice()) {
-            $data['value'] = (string) ((int) ((float) $data['value'] * 100));
+            $currency = shopper_currency();
+            $data['value'] = is_no_division_currency($currency)
+                ? (string) (int) $data['value']
+                : (string) ((int) ((float) $data['value'] * 100));
         }
 
         return $data;

@@ -13,28 +13,38 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Utilities\Set;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
-use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
+use Laravelcm\LivewireSlideOvers\SlideOverComponent;
 use Shopper\Components\Form\SeoField;
 use Shopper\Components\Section;
+use Shopper\Contracts\SlideOverForm;
 use Shopper\Core\Models\Contracts\Category;
-use Shopper\Livewire\Components\SlideOverComponent;
+use Shopper\Traits\HandlesAuthorizationExceptions;
+use Shopper\Traits\InteractsWithSlideOverForm;
 
 /**
  * @property-read Schema $form
  */
-class CategoryForm extends SlideOverComponent implements HasActions, HasForms
+class CategoryForm extends SlideOverComponent implements HasActions, HasSchemas, SlideOverForm
 {
+    use HandlesAuthorizationExceptions;
     use InteractsWithActions;
-    use InteractsWithForms;
+    use InteractsWithSchemas;
+    use InteractsWithSlideOverForm;
 
     public Category $category;
+
+    public string $action = 'save';
+
+    public ?string $title = null;
+
+    public ?string $description = null;
 
     /** @var array<string, mixed>|null */
     public ?array $data = [];
@@ -42,6 +52,10 @@ class CategoryForm extends SlideOverComponent implements HasActions, HasForms
     public function mount(?Category $category = null): void
     {
         $this->category = $category ?? resolve(Category::class)::query()->newModelInstance();
+
+        $this->title = $this->category->id
+            ? $this->category->name
+            : __('shopper::forms.actions.add_label', ['label' => __('shopper::pages/categories.single')]);
 
         $this->form->fill($this->category->toArray());
     }
@@ -137,10 +151,5 @@ class CategoryForm extends SlideOverComponent implements HasActions, HasForms
             name: 'shopper.categories.index',
             navigate: true,
         );
-    }
-
-    public function render(): View
-    {
-        return view('shopper::livewire.slide-overs.category-form');
     }
 }

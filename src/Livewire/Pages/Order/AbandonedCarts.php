@@ -8,8 +8,8 @@ use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
@@ -21,11 +21,13 @@ use Illuminate\Database\Eloquent\Builder;
 use Mckenziearts\Icons\Untitledui\Enums\Untitledui;
 use Shopper\Cart\Models\Cart;
 use Shopper\Livewire\Pages\AbstractPageComponent;
+use Shopper\Traits\HandlesAuthorizationExceptions;
 
-class AbandonedCarts extends AbstractPageComponent implements HasActions, HasForms, HasTable
+class AbandonedCarts extends AbstractPageComponent implements HasActions, HasSchemas, HasTable
 {
+    use HandlesAuthorizationExceptions;
     use InteractsWithActions;
-    use InteractsWithForms;
+    use InteractsWithSchemas;
     use InteractsWithTable;
 
     public function mount(): void

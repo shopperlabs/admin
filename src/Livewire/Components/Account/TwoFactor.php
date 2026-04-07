@@ -6,9 +6,9 @@ namespace Shopper\Livewire\Components\Account;
 
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Filament\Schemas\Contracts\HasSchemas;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
@@ -16,17 +16,20 @@ use Livewire\Component;
 use Shopper\Actions\Auth\DisableTwoFactorAuthentication;
 use Shopper\Actions\Auth\EnableTwoFactorAuthentication;
 use Shopper\Actions\Auth\GenerateNewRecoveryCodes;
-use Shopper\Models\Contracts\ShopperUser;
+use Shopper\Contracts\HasStoreAuthentication;
+use Shopper\Contracts\HasStoreAuthenticationRecovery;
 use Shopper\Traits\ConfirmsPasswords;
+use Shopper\Traits\HandlesAuthorizationExceptions;
 
 /**
- * @property-read ShopperUser $user
+ * @property-read HasStoreAuthentication&HasStoreAuthenticationRecovery $user
  */
-class TwoFactor extends Component implements HasActions, HasForms
+class TwoFactor extends Component implements HasActions, HasSchemas
 {
     use ConfirmsPasswords;
+    use HandlesAuthorizationExceptions;
     use InteractsWithActions;
-    use InteractsWithForms;
+    use InteractsWithSchemas;
 
     public bool $showingQrCode = false;
 
@@ -96,16 +99,16 @@ class TwoFactor extends Component implements HasActions, HasForms
     }
 
     #[Computed]
-    public function user(): ShopperUser
+    public function user(): HasStoreAuthentication
     {
-        /** @var ShopperUser */
+        /** @var HasStoreAuthentication */
         return shopper()->auth()->user();
     }
 
     #[Computed]
     public function enabled(): bool
     {
-        return ! empty($this->user->store_two_factor_secret);
+        return $this->user->getStoreAuthenticationSecret() !== null;
     }
 
     public function render(): View

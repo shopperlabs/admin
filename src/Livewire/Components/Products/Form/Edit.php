@@ -23,6 +23,7 @@ use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\IconSize;
+use Filament\Support\Enums\Width;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -33,12 +34,14 @@ use Shopper\Components\Separator;
 use Shopper\Core\Models\Contracts\Product;
 use Shopper\Core\Models\ProductTag;
 use Shopper\Feature;
+use Shopper\Traits\HandlesAuthorizationExceptions;
 
 /**
  * @property-read Schema $form
  */
 class Edit extends Component implements HasActions, HasSchemas
 {
+    use HandlesAuthorizationExceptions;
     use InteractsWithActions;
     use InteractsWithSchemas;
 
@@ -190,7 +193,7 @@ class Edit extends Component implements HasActions, HasSchemas
                                             ->unique(ProductTag::class, 'slug'),
                                     ])
                                     ->createOptionModalHeading(__('shopper::pages/tags.create'))
-                                    ->createOptionAction(fn (Action $action): Action => $action->modalWidth('md'))
+                                    ->createOptionAction(fn (Action $action): Action => $action->modalWidth(Width::Medium))
                                     ->visible(Feature::enabled('tag')),
                             ])
                             ->visible(

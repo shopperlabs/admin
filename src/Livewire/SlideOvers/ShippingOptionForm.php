@@ -11,29 +11,34 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Group;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
+use Laravelcm\LivewireSlideOvers\SlideOverComponent;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
+use Shopper\Components\Form\MoneyInput;
 use Shopper\Components\Separator;
 use Shopper\Contracts\SlideOverForm;
 use Shopper\Core\Models\CarrierOption;
 use Shopper\Core\Models\Zone;
-use Shopper\Livewire\Components\SlideOverComponent;
+use Shopper\Traits\HandlesAuthorizationExceptions;
 use Shopper\Traits\InteractsWithSlideOverForm;
 
 /**
  * @property-read Zone $zone
  * @property-read Schema $form
  */
-class ShippingOptionForm extends SlideOverComponent implements HasActions, HasForms, SlideOverForm
+class ShippingOptionForm extends SlideOverComponent implements HasActions, HasSchemas, SlideOverForm
 {
+    use HandlesAuthorizationExceptions;
     use InteractsWithActions;
-    use InteractsWithForms;
+    use InteractsWithSchemas;
     use InteractsWithSlideOverForm;
 
+    #[Locked]
     public int $zoneId;
 
     public ?CarrierOption $option = null;
@@ -78,13 +83,12 @@ class ShippingOptionForm extends SlideOverComponent implements HasActions, HasFo
                             ->label(__('shopper::forms.label.name'))
                             ->placeholder('Standard option...')
                             ->required(),
-                        TextInput::make('price') // @phpstan-ignore-line
+                        MoneyInput::make('price')
                             ->label(__('shopper::forms.label.price'))
-                            ->numeric()
                             ->required()
                             ->rules(['regex:/^\d{1,6}(\.\d{0,2})?$/'])
                             ->suffix($this->zone->currency->code)
-                            ->currencyMask(thousandSeparator: ',', decimalSeparator: '.', precision: 2),
+                            ->currency($this->zone->currency->code),
                         Select::make('carrier_id')
                             ->label(__('shopper::pages/settings/carriers.title'))
                             ->options($this->zone->carriers->pluck('name', 'id'))

@@ -5,55 +5,48 @@ declare(strict_types=1);
 namespace Shopper\Livewire\SlideOvers;
 
 use Illuminate\Contracts\View\View;
-use Livewire\Attributes\On;
+use Illuminate\Support\Facades\DB;
+use Laravelcm\LivewireSlideOvers\SlideOverComponent;
+use Livewire\Attributes\Renderless;
 use Shopper\Core\Models\Contracts\Category;
-use Shopper\Livewire\Components\SlideOverComponent;
+use Shopper\Traits\HandlesAuthorizationExceptions;
 
 class ReOrderCategories extends SlideOverComponent
 {
-    /**
-     * @param  array<string, mixed>  $items
-     */
-    public function updateGroupOrder(array $items): void
+    use HandlesAuthorizationExceptions;
+
+    public static function panelMaxWidth(): string
     {
-        $this->authorize('edit_categories');
-
-        foreach ($items as $item) {
-            resolve(Category::class)::query()
-                ->findOrFail((int) $item['value'])
-                ->update(['position' => $item['order']]);
-        }
-
-        $this->dispatch('category-save');
+        return '3xl';
     }
 
     /**
-     * @param  array<string, mixed>  $groups
+     * @param  array<int, string>  $order
      */
-    public function updateCategoryOrder(array $groups): void
+    #[Renderless]
+    public function reorder(array $order, ?string $parentId = null): void
     {
         $this->authorize('edit_categories');
 
-        foreach ($groups as $group) {
-            foreach ($group['items'] as $item) {
-                resolve(Category::class)::query()
-                    ->findOrFail((int) $item['value'])
+        $categoryModel = resolve(Category::class);
+
+        DB::transaction(function () use ($order, $parentId, $categoryModel): void {
+            foreach ($order as $position => $categoryId) {
+                $categoryModel::query()
+                    ->where('id', (int) $categoryId)
                     ->update([
-                        'parent_id' => (int) $group['value'],
-                        'position' => $item['order'],
+                        'parent_id' => $parentId !== null ? (int) $parentId : null,
+                        'position' => $position + 1,
                     ]);
             }
-        }
-
-        $this->dispatch('category-save');
+        });
     }
 
-    #[On('category-save')]
     public function render(): View
     {
         return view('shopper::livewire.slide-overs.re-order-categories', [
             'categories' => resolve(Category::class)::query()
-                ->with('children')
+                ->with('children.children.children')
                 ->whereNull('parent_id')
                 ->orderBy('position')
                 ->get(),

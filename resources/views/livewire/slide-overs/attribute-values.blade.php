@@ -1,4 +1,4 @@
-<div class="flex h-full flex-col divide-y divide-gray-200 dark:divide-white/10">
+<x-shopper::slideover-card>
     <div class="h-0 flex-1 overflow-y-auto py-6">
         <header class="px-4 sm:px-6">
             <div class="flex items-start justify-between">
@@ -10,17 +10,7 @@
                         {{ $attribute->name }}
                     </x-filament::badge>
                 </div>
-                <div class="ml-3 flex h-7 items-center gap-2">
-                    <x-shopper::escape />
-                    <button
-                        type="button"
-                        class="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none dark:bg-gray-900 dark:text-gray-500 dark:hover:text-gray-300"
-                        wire:click="$dispatch('closePanel')"
-                    >
-                        <span class="sr-only">Close panel</span>
-                        <x-untitledui-x class="size-6" stroke-width="1.5" aria-hidden="true" />
-                    </button>
-                </div>
+                <x-livewire-slide-over::close-icon />
             </div>
             <div class="mt-1">
                 <p class="text-sm text-gray-500 dark:text-gray-400">
@@ -32,4 +22,4 @@
             {{ $this->table }}
         </div>
     </div>
-</div>
+</x-shopper::slideover-card>

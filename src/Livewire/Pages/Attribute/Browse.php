@@ -9,9 +9,9 @@ use Filament\Actions\BulkAction;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
 use Filament\Actions\DeleteBulkAction;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
@@ -24,11 +24,13 @@ use Mckenziearts\Icons\Untitledui\Enums\Untitledui;
 use Shopper\Components\Tables\IconColumn;
 use Shopper\Core\Models\Attribute;
 use Shopper\Livewire\Pages\AbstractPageComponent;
+use Shopper\Traits\HandlesAuthorizationExceptions;
 
-class Browse extends AbstractPageComponent implements HasActions, HasForms, HasTable
+class Browse extends AbstractPageComponent implements HasActions, HasSchemas, HasTable
 {
+    use HandlesAuthorizationExceptions;
     use InteractsWithActions;
-    use InteractsWithForms;
+    use InteractsWithSchemas;
     use InteractsWithTable;
 
     public function mount(): void
@@ -88,6 +90,7 @@ class Browse extends AbstractPageComponent implements HasActions, HasForms, HasT
                             arguments: ['attributeId' => $record->id]
                         )
                     )
+                    ->authorize('edit_attributes')
                     ->visible(shopper()->auth()->user()->can('edit_attributes')),
                 Action::make('delete')
                     ->label(__('shopper::forms.actions.delete'))
@@ -97,6 +100,7 @@ class Browse extends AbstractPageComponent implements HasActions, HasForms, HasT
                     ->color('danger')
                     ->requiresConfirmation()
                     ->action(fn (Attribute $record) => $record->delete())
+                    ->authorize('delete_attributes')
                     ->visible(shopper()->auth()->user()->can('delete_attributes')),
             ])
             ->groupedBulkActions([
@@ -118,7 +122,7 @@ class Browse extends AbstractPageComponent implements HasActions, HasForms, HasT
                     ->deselectRecordsAfterCompletion(),
                 BulkAction::make('enabled')
                     ->label(__('shopper::forms.actions.enable'))
-                    ->icon('untitledui-check-verified')
+                    ->icon(Untitledui::CheckVerified)
                     ->action(function (Collection $records): void {
                         $records->each->updateStatus(); // @phpstan-ignore-line
 
@@ -134,7 +138,7 @@ class Browse extends AbstractPageComponent implements HasActions, HasForms, HasT
                     ->deselectRecordsAfterCompletion(),
                 BulkAction::make('disabled')
                     ->label(__('shopper::forms.actions.disable'))
-                    ->icon('untitledui-slash-circle-01')
+                    ->icon(Untitledui::SlashCircle01)
                     ->action(function (Collection $records): void {
                         $records->each->updateStatus(false); // @phpstan-ignore-line
 

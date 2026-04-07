@@ -11,13 +11,15 @@ use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Arr;
+use Laravelcm\LivewireSlideOvers\SlideOverComponent;
+use Livewire\Attributes\Locked;
 use Shopper\Components\Separator;
 use Shopper\Contracts\SlideOverForm;
 use Shopper\Core\Enum\ProductType;
@@ -26,20 +28,22 @@ use Shopper\Core\Models\Contracts\Product;
 use Shopper\Core\Models\TaxRate;
 use Shopper\Core\Models\TaxRateRule;
 use Shopper\Core\Models\TaxZone;
-use Shopper\Livewire\Components\SlideOverComponent;
+use Shopper\Traits\HandlesAuthorizationExceptions;
 use Shopper\Traits\InteractsWithSlideOverForm;
 
 /**
  * @property-read Schema $form
  */
-class TaxRateOverrideForm extends SlideOverComponent implements HasActions, HasForms, SlideOverForm
+class TaxRateOverrideForm extends SlideOverComponent implements HasActions, HasSchemas, SlideOverForm
 {
+    use HandlesAuthorizationExceptions;
     use InteractsWithActions;
-    use InteractsWithForms;
+    use InteractsWithSchemas;
     use InteractsWithSlideOverForm;
 
     public ?TaxRate $taxRate = null;
 
+    #[Locked]
     public ?int $taxZoneId = null;
 
     public string $action = 'store';
