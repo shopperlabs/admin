@@ -38,7 +38,7 @@ class VariantStock extends Component implements HasActions, HasSchemas
     public function stockAction(): Action
     {
         return Action::make('stock')
-            ->authorize('edit_product_variants')
+            ->authorize('products.variants.edit')
             ->label(__('shopper::forms.actions.update'))
             ->color('gray')
             ->icon(Untitledui::Package)

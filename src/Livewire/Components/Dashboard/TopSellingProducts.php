@@ -24,32 +24,15 @@ final class TopSellingProducts extends Component
     #[Computed]
     public function products(): Collection
     {
-        /** @var array<int, array{product_id: int, sales: int, reviews_count: int, average_rating: float|null}> $cached */
-        $cached = Cache::flexible(
-            'dashboard.products:top-selling',
-            [300, 1800],
-            fn (): array => $this->buildTopProductsData()
-        );
+        /** @var array<int, array<string, mixed>> $cached */
+        $cached = Cache::flexible('dashboard:top-selling-products', [300, 1800], fn (): array => $this->buildTopProducts());
 
-        if ($cached === []) {
-            return new Collection;
-        }
+        return collect($cached);
+    }
 
-        $productIds = array_column($cached, 'product_id');
-
-        /** @var Collection<int, Model> $products */
-        $products = resolve(ProductContract::class)::query()
-            ->whereIn('id', $productIds)
-            ->with('media')
-            ->get()
-            ->keyBy('id');
-
-        return collect($cached)->map(fn (array $row): array => [
-            'product' => $products->get($row['product_id']),
-            'sales' => $row['sales'],
-            'reviews_count' => $row['reviews_count'],
-            'average_rating' => $row['average_rating'],
-        ]);
+    public function placeholder(): View
+    {
+        return view('shopper::livewire.components.dashboard.placeholders.top-selling-products');
     }
 
     public function render(): View
@@ -58,9 +41,9 @@ final class TopSellingProducts extends Component
     }
 
     /**
-     * @return array<int, array{product_id: int, sales: int, reviews_count: int, average_rating: float|null}>
+     * @return array<int, array<string, mixed>>
      */
-    private function buildTopProductsData(): array
+    private function buildTopProducts(): array
     {
         $variantClass = resolve(ProductVariant::class)::class;
 
@@ -79,20 +62,24 @@ final class TopSellingProducts extends Component
 
         $productIds = $topProducts->pluck('parent_product_id')->filter()->all();
 
-        /** @var Collection<int, Model> $ratingsByProduct */
-        $ratingsByProduct = resolve(ProductContract::class)::query()
+        /** @var \Illuminate\Database\Eloquent\Collection<int, Model> $products */
+        // @phpstan-ignore-next-line
+        $products = resolve(ProductContract::class)::query()
             ->whereIn('id', $productIds)
-            ->with(['ratings' => fn ($query) => $query->where('approved', true)])
+            ->with([
+                'media',
+                'ratings' => fn ($query) => $query->where('approved', true),
+            ])
             ->get()
             ->keyBy('id');
 
         return $topProducts
-            ->map(function (object $row) use ($ratingsByProduct): array {
-                $product = $ratingsByProduct->get((int) $row->parent_product_id);
+            ->map(function (object $row) use ($products): array {
+                $product = $products->get((int) $row->parent_product_id);
                 $approvedRatings = $product?->getRelation('ratings');
 
                 return [
-                    'product_id' => (int) $row->parent_product_id,
+                    'product' => $product,
                     'sales' => (int) $row->total_sales,
                     'reviews_count' => $approvedRatings?->count() ?? 0,
                     'average_rating' => $approvedRatings?->isNotEmpty()

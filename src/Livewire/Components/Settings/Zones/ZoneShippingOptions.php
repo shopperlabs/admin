@@ -13,6 +13,7 @@ use Filament\Schemas\Contracts\HasSchemas;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Lazy;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Mckenziearts\Icons\Untitledui\Enums\Untitledui;
@@ -30,6 +31,7 @@ class ZoneShippingOptions extends Component implements HasActions, HasSchemas
     use InteractsWithActions;
     use InteractsWithSchemas;
 
+    #[Locked]
     public ?int $selectedZoneId = null;
 
     #[On('zone.changed')]
@@ -47,7 +49,7 @@ class ZoneShippingOptions extends Component implements HasActions, HasSchemas
     public function deleteAction(): Action
     {
         return Action::make('delete')
-            ->authorize('access_setting')
+            ->authorize('system.settings')
             ->requiresConfirmation()
             ->icon(Untitledui::Trash03)
             ->color('danger')
@@ -74,8 +76,8 @@ class ZoneShippingOptions extends Component implements HasActions, HasSchemas
             ->icon(Untitledui::Edit03)
             ->action(fn (array $arguments) => $this->dispatch(
                 'openPanel',
-                component: 'shopper-slide-overs.shipping-option-form',
-                arguments: ['zoneId' => $arguments['zone_id'], 'optionId' => $arguments['option_id']]
+                'shopper-slide-overs.shipping-option-form',
+                ['zoneId' => $arguments['zone_id'], 'optionId' => $arguments['option_id']]
             ));
     }
 

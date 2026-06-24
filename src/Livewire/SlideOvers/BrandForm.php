@@ -49,6 +49,10 @@ class BrandForm extends SlideOverComponent implements HasActions, HasSchemas, Sl
 
     public function mount(?Brand $brand = null): void
     {
+        $user = shopper()->auth()->user();
+
+        abort_unless($user->can('brands.create') || $user->can('brands.edit'), 403);
+
         $this->brand = $brand ?? resolve(Brand::class)::query()->newModelInstance();
 
         $this->title = $this->brand->id
@@ -120,11 +124,11 @@ class BrandForm extends SlideOverComponent implements HasActions, HasSchemas, Sl
     public function save(): void
     {
         if ($this->brand->id) {
-            $this->authorize('edit_brands', $this->brand);
+            $this->authorize('brands.edit', $this->brand);
 
             $this->brand->update($this->form->getState());
         } else {
-            $this->authorize('add_brands');
+            $this->authorize('brands.create');
 
             $brand = resolve(Brand::class)::query()->create($this->form->getState());
             $this->form->model($brand)->saveRelationships();

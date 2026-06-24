@@ -32,6 +32,8 @@ use Shopper\Core\Models\Country;
 use Shopper\Livewire\Pages\AbstractPageComponent;
 use Shopper\Models\Contracts\ShopperUser;
 use Shopper\Notifications\CustomerSendCredentials;
+use Shopper\Sidebar\Breadcrumbs\Breadcrumb;
+use Shopper\Sidebar\Traits\WithBreadcrumbs;
 use Shopper\Traits\HandlesAuthorizationExceptions;
 
 /**
@@ -42,13 +44,21 @@ class Create extends AbstractPageComponent implements HasActions, HasSchemas
     use HandlesAuthorizationExceptions;
     use InteractsWithActions;
     use InteractsWithSchemas;
+    use WithBreadcrumbs;
 
     /** @var array<string, mixed>|null */
     public ?array $data = [];
 
+    public function getBreadcrumbs(): array
+    {
+        return [
+            new Breadcrumb(text: __('shopper::forms.actions.create')),
+        ];
+    }
+
     public function mount(): void
     {
-        $this->authorize('add_customers');
+        $this->authorize('customers.create');
 
         $this->form->fill();
     }
@@ -141,7 +151,7 @@ class Create extends AbstractPageComponent implements HasActions, HasSchemas
 
     public function store(): void
     {
-        $this->authorize('add_customers');
+        $this->authorize('customers.create');
 
         /** @var array<string, mixed> $data */
         $data = $this->form->getState();
@@ -157,7 +167,6 @@ class Create extends AbstractPageComponent implements HasActions, HasSchemas
             'password',
             'opt_in',
         ]);
-
         $address = array_merge(Arr::only($data, ['address'])['address'], [
             'first_name' => $data['first_name'],
             'last_name' => $data['last_name'],

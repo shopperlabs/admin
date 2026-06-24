@@ -62,7 +62,7 @@ class TaxRateOverrideForm extends SlideOverComponent implements HasActions, HasS
 
     public function mount(int $taxZoneId, ?int $taxRateId = null): void
     {
-        $this->authorize('access_setting');
+        $this->authorize('system.settings');
 
         $this->taxZoneId = $taxZoneId;
 
@@ -181,7 +181,7 @@ class TaxRateOverrideForm extends SlideOverComponent implements HasActions, HasS
 
     public function store(): void
     {
-        $this->authorize('access_setting');
+        $this->authorize('system.settings');
 
         $data = $this->form->getState();
         $targets = collect(Arr::pull($data, 'targets', []))
@@ -212,6 +212,6 @@ class TaxRateOverrideForm extends SlideOverComponent implements HasActions, HasS
             ->success()
             ->send();
 
-        $this->redirectRoute('shopper.settings.taxes', ['zone' => $this->taxZoneId]);
+        $this->redirectRoute('shopper.settings.taxes', ['zone' => $this->taxZoneId], navigate: true);
     }
 }

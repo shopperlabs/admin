@@ -7,6 +7,7 @@ namespace Shopper\Livewire\SlideOvers;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\DB;
 use Laravelcm\LivewireSlideOvers\SlideOverComponent;
+use Livewire\Attributes\Async;
 use Livewire\Attributes\Renderless;
 use Shopper\Core\Models\Contracts\Category;
 use Shopper\Traits\HandlesAuthorizationExceptions;
@@ -23,10 +24,10 @@ class ReOrderCategories extends SlideOverComponent
     /**
      * @param  array<int, string>  $order
      */
-    #[Renderless]
+    #[Renderless, Async]
     public function reorder(array $order, ?string $parentId = null): void
     {
-        $this->authorize('edit_categories');
+        $this->authorize('categories.edit');
 
         $categoryModel = resolve(Category::class);
 

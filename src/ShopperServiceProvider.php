@@ -10,8 +10,10 @@ use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\ImageEntry;
+use Filament\Notifications\Livewire\DatabaseNotifications;
 use Filament\Support\Colors\Color;
 use Filament\Support\Facades\FilamentColor;
+use Filament\Support\Facades\FilamentView;
 use Filament\Tables\Columns\Column;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -32,9 +34,11 @@ use Shopper\Http\Middleware\SetLocale;
 use Shopper\Http\Responses\LoginResponse;
 use Shopper\Livewire\Components;
 use Shopper\Livewire\Pages;
+use Shopper\Navigation\Product\ProductSectionManager;
+use Shopper\Navigation\Setting\SettingManager;
 use Shopper\Providers\ComponentsServiceProvider;
 use Shopper\Providers\SidebarServiceProvider;
-use Shopper\Settings\SettingManager;
+use Shopper\Theme\ThemeManager;
 use Shopper\Traits\LoadComponents;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
@@ -55,6 +59,7 @@ final class ShopperServiceProvider extends PackageServiceProvider
         'models',
         'routes',
         'settings',
+        'themes',
     ];
 
     protected string $root = __DIR__.'/..';
@@ -95,6 +100,7 @@ final class ShopperServiceProvider extends PackageServiceProvider
     public function packageRegistered(): void
     {
         $this->app['config']->set('livewire-slide-over.include_js', false);
+        $this->app['config']->set('sidebar.breadcrumbs.view', 'shopper::components.breadcrumbs');
 
         $this->registerConfigFiles();
         $this->registerDatabase();
@@ -109,10 +115,22 @@ final class ShopperServiceProvider extends PackageServiceProvider
         $this->app->register(SidebarServiceProvider::class);
         $this->app->register(ComponentsServiceProvider::class);
 
+        if (config('shopper.admin.notifications.database.enabled')) {
+            $this->app->register(EventServiceProvider::class);
+        }
+
         $this->app->scoped('shopper', fn (): ShopperPanel => new ShopperPanel);
 
         $this->app->singleton(SettingManager::class, fn (): SettingManager => (new SettingManager)->register(
             config('shopper.settings.items', [])
+        ));
+
+        $this->app->singleton(ProductSectionManager::class, fn (): ProductSectionManager => (new ProductSectionManager)->register(
+            config('shopper.components.product.sections', [])
+        ));
+
+        $this->app->singleton(ThemeManager::class, fn (): ThemeManager => (new ThemeManager)->registerMany(
+            config('shopper.themes.registered', [])
         ));
 
         $this->loadViewsFrom($this->root.'/resources/views', 'shopper');
@@ -166,6 +184,12 @@ final class ShopperServiceProvider extends PackageServiceProvider
         if ($settingItems !== []) {
             app(SettingManager::class)->register($settingItems);
         }
+
+        $productSections = $manager->getProductSections();
+
+        if ($productSections !== []) {
+            app(ProductSectionManager::class)->register($productSections);
+        }
     }
 
     protected function bootLivewireComponents(): void
@@ -195,6 +219,7 @@ final class ShopperServiceProvider extends PackageServiceProvider
             'auth.login' => Pages\Auth\Login::class,
             'auth.password' => Pages\Auth\ForgotPassword::class,
             'auth.password-reset' => Pages\Auth\ResetPassword::class,
+            'session-expired' => Components\SessionExpired::class,
             'setup-guide' => Components\Dashboard\SetupGuide::class,
             'dashboard.stat-cards' => Components\Dashboard\StatCards::class,
             'dashboard.revenue-chart' => Components\Dashboard\RevenueChart::class,
@@ -207,6 +232,14 @@ final class ShopperServiceProvider extends PackageServiceProvider
 
     protected function registerCustomFilamentItems(): void
     {
+        FilamentView::spa();
+
+        if (config('shopper.admin.notifications.database.enabled')) {
+            DatabaseNotifications::trigger('shopper::components.notifications.database-notifications-trigger');
+            DatabaseNotifications::pollingInterval(config('shopper.admin.notifications.database.polling_interval'));
+            DatabaseNotifications::authGuard(config('shopper.auth.guard'));
+        }
+
         FilamentColor::register([
             'primary' => config('shopper.admin.primary_color'),
             'teal' => Color::Teal,

@@ -15,25 +15,51 @@ use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Support\Enums\Size;
 use Filament\Support\Enums\Width;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\Rules\Unique;
+use Livewire\Attributes\Layout;
 use Shopper\Core\Models\Contracts\Product;
 use Shopper\Core\Models\Contracts\ProductVariant;
 use Shopper\Livewire\Pages\AbstractPageComponent;
+use Shopper\Sidebar\Breadcrumbs\Breadcrumb;
+use Shopper\Sidebar\Traits\WithBreadcrumbs;
 use Shopper\Traits\HandlesAuthorizationExceptions;
 
+#[Layout('shopper::components.layouts.product')]
 class Variant extends AbstractPageComponent implements HasActions, HasSchemas
 {
     use HandlesAuthorizationExceptions;
     use InteractsWithActions;
     use InteractsWithSchemas;
+    use WithBreadcrumbs;
 
     public ?Product $product = null;
 
     public ?ProductVariant $variant = null;
 
+    public function getBreadcrumbs(): array
+    {
+        $crumbs = [];
+
+        if ($this->product !== null) {
+            $crumbs[] = new Breadcrumb(
+                text: $this->product->name,
+                url: Route::has('shopper.products.edit')
+                    ? route('shopper.products.edit', $this->product)
+                    : null,
+            );
+        }
+
+        if ($this->variant !== null) {
+            $crumbs[] = new Breadcrumb(text: $this->variant->name);
+        }
+
+        return $crumbs;
+    }
+
     public function mount(): void
     {
-        $this->authorize('edit_products');
+        $this->authorize('products.edit');
 
         $this->variant?->load([
             'prices',
@@ -48,7 +74,7 @@ class Variant extends AbstractPageComponent implements HasActions, HasSchemas
         return Action::make('updateStock')
             ->label(__('shopper::forms.actions.edit'))
             ->color('gray')
-            ->authorize('edit_products')
+            ->authorize('products.edit')
             ->modalWidth(Width::Large)
             ->fillForm([
                 'sku' => $this->variant->sku,
@@ -84,6 +110,7 @@ class Variant extends AbstractPageComponent implements HasActions, HasSchemas
     public function mediaAction(): Action
     {
         return Action::make('media')
+            ->authorize('products.variants.edit')
             ->label(__('shopper::forms.actions.edit'))
             ->color('gray')
             ->record($this->variant) // @phpstan-ignore-line

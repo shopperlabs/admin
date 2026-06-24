@@ -47,7 +47,7 @@ class AttributeValues extends SlideOverComponent implements HasActions, HasSchem
 
     public function mount(int $attributeId): void
     {
-        $this->authorize('edit_attributes');
+        $this->authorize('attributes.edit');
 
         $this->attribute = Attribute::with('values')->find($attributeId);
         $this->values = $this->attribute->values;
@@ -99,6 +99,7 @@ class AttributeValues extends SlideOverComponent implements HasActions, HasSchem
             ])
             ->recordActions([
                 Action::make('edit')
+                    ->authorize('attributes.edit')
                     ->icon(Untitledui::Edit03)
                     ->iconButton()
                     ->modalHeading(__('shopper::forms.actions.edit'))
@@ -117,6 +118,7 @@ class AttributeValues extends SlideOverComponent implements HasActions, HasSchem
                         $this->dispatch('$refresh');
                     }),
                 Action::make('delete')
+                    ->authorize('attributes.delete')
                     ->icon(Untitledui::Trash03)
                     ->color('danger')
                     ->iconButton()
@@ -125,6 +127,7 @@ class AttributeValues extends SlideOverComponent implements HasActions, HasSchem
             ])
             ->toolbarActions([
                 BulkAction::make('delete')
+                    ->authorize('attributes.delete')
                     ->label(__('shopper::forms.actions.delete'))
                     ->icon(Untitledui::Trash03)
                     ->color('danger')
@@ -162,7 +165,7 @@ class AttributeValues extends SlideOverComponent implements HasActions, HasSchem
 
     public function removeValue(int $id): void
     {
-        $this->authorize('edit_attributes');
+        $this->authorize('attributes.delete');
 
         AttributeValue::query()->find($id)->delete();
 

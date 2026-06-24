@@ -65,7 +65,7 @@ class ZoneForm extends SlideOverComponent implements HasActions, HasSchemas, Sli
 
     public function mount(?int $zoneId = null): void
     {
-        $this->authorize('access_setting');
+        $this->authorize('system.settings');
 
         $this->zone = $zoneId
             ? Zone::with(['countries', 'paymentMethods', 'carriers'])->find($zoneId)
@@ -116,7 +116,10 @@ class ZoneForm extends SlideOverComponent implements HasActions, HasSchemas, Sli
                         Hidden::make('slug'),
                         TextInput::make('code')
                             ->label(__('shopper::forms.label.code'))
-                            ->placeholder('AF'),
+                            ->placeholder('AF')
+                            ->required()
+                            ->maxLength(10)
+                            ->unique(table: Zone::class, column: 'code', ignoreRecord: true),
                     ]),
                 Select::make('countries')
                     ->label(__('shopper::forms.label.countries'))
@@ -153,7 +156,7 @@ class ZoneForm extends SlideOverComponent implements HasActions, HasSchemas, Sli
                         TextEntry::make('providers')
                             ->label(__('shopper::pages/settings/zones.providers'))
                             ->state(new HtmlString(Blade::render(<<<'Blade'
-                                <p class="text-sm text-gray-500 dark:text-gray-400">
+                                <p class="text-sm text-sh-fg-muted">
                                     {{ __('shopper::pages/settings/zones.providers_description') }}
                                 </p>
                             Blade))),
@@ -184,7 +187,7 @@ class ZoneForm extends SlideOverComponent implements HasActions, HasSchemas, Sli
 
     public function store(): void
     {
-        $this->authorize('access_setting');
+        $this->authorize('system.settings');
 
         $data = $this->form->getState();
         $validInputs = Arr::except($data, ['countries', 'payments', 'carriers']);
@@ -207,6 +210,6 @@ class ZoneForm extends SlideOverComponent implements HasActions, HasSchemas, Sli
             ->success()
             ->send();
 
-        $this->redirectRoute('shopper.settings.zones', ['zone' => $this->zone->id]);
+        $this->redirectRoute('shopper.settings.zones', ['zone' => $this->zone->id], navigate: true);
     }
 }

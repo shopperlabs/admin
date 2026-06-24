@@ -32,6 +32,7 @@ return [
 
     'inventory' => [
         'removed' => 'Inventario eliminado exitosamente.',
+        'updated' => 'Stock actualizado correctamente.',
     ],
 
     'initialize' => 'Tienda configurada exitosamente, ahora puedes gestionar todo.',
@@ -42,6 +43,7 @@ return [
         'role_added' => 'Se ha creado un rol exitosamente',
         'role_deleted' => 'Rol eliminado exitosamente.',
         'admin_deleted' => 'Administrador eliminado exitosamente',
+        'user_id_copied' => 'ID de usuario copiado al portapapeles',
         'permission_add' => 'Se ha creado un nuevo permiso y se ha añadido a este rol',
         'permission_revoke' => 'El permiso :permission ha sido revocado de este rol',
         'permission_allow' => 'El permiso :permission ha sido otorgado a este rol',
@@ -71,9 +73,34 @@ return [
         'remove' => 'El :item se ha eliminado correctamente.',
     ],
 
+    'shipments' => [
+        'label_created' => 'Etiqueta de envío creada',
+    ],
+
     'unauthorized' => [
         'title' => 'No autorizado',
         'body' => 'No tienes permiso para realizar esta acción.',
+    ],
+
+    'database' => [
+        'open' => 'Abrir notificaciones',
+        'view_order' => 'Ver pedido',
+        'order_created' => [
+            'title' => 'Nuevo pedido recibido',
+            'body' => 'El pedido :number acaba de realizarse.',
+        ],
+        'order_paid' => [
+            'title' => 'Pedido pagado',
+            'body' => 'Se ha recibido el pago del pedido :number.',
+        ],
+        'payment_failed' => [
+            'title' => 'Pago fallido',
+            'body' => 'Un intento de pago para el pedido :number ha fallado.',
+        ],
+        'refund_failed' => [
+            'title' => 'Reembolso fallido',
+            'body' => 'Un intento de reembolso para el pedido :number ha fallado.',
+        ],
     ],
 
 ];

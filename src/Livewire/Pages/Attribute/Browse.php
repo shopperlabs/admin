@@ -35,7 +35,7 @@ class Browse extends AbstractPageComponent implements HasActions, HasSchemas, Ha
 
     public function mount(): void
     {
-        $this->authorize('browse_attributes');
+        $this->authorize('attributes.browse');
     }
 
     public function table(Table $table): Table
@@ -74,8 +74,8 @@ class Browse extends AbstractPageComponent implements HasActions, HasSchemas, Ha
                     ->action(
                         fn (Attribute $record) => $this->dispatch(
                             'openPanel',
-                            component: 'shopper-slide-overs.attribute-values',
-                            arguments: ['attributeId' => $record->id]
+                            'shopper-slide-overs.attribute-values',
+                            ['attributeId' => $record->id]
                         )
                     )
                     ->visible(fn (Attribute $record): bool => in_array($record->type, Attribute::fieldsWithValues())),
@@ -86,12 +86,12 @@ class Browse extends AbstractPageComponent implements HasActions, HasSchemas, Ha
                     ->action(
                         fn (Attribute $record) => $this->dispatch(
                             'openPanel',
-                            component: 'shopper-slide-overs.attribute-form',
-                            arguments: ['attributeId' => $record->id]
+                            'shopper-slide-overs.attribute-form',
+                            ['attributeId' => $record->id]
                         )
                     )
-                    ->authorize('edit_attributes')
-                    ->visible(shopper()->auth()->user()->can('edit_attributes')),
+                    ->authorize('attributes.edit')
+                    ->visible(shopper()->auth()->user()->can('attributes.edit')),
                 Action::make('delete')
                     ->label(__('shopper::forms.actions.delete'))
                     ->icon(Untitledui::Trash03)
@@ -100,13 +100,13 @@ class Browse extends AbstractPageComponent implements HasActions, HasSchemas, Ha
                     ->color('danger')
                     ->requiresConfirmation()
                     ->action(fn (Attribute $record) => $record->delete())
-                    ->authorize('delete_attributes')
-                    ->visible(shopper()->auth()->user()->can('delete_attributes')),
+                    ->authorize('attributes.delete')
+                    ->visible(shopper()->auth()->user()->can('attributes.delete')),
             ])
             ->groupedBulkActions([
                 DeleteBulkAction::make()
-                    ->authorize('delete_attributes')
-                    ->visible(shopper()->auth()->user()->can('delete_attributes'))
+                    ->authorize('attributes.delete')
+                    ->visible(shopper()->auth()->user()->can('attributes.delete'))
                     ->label(__('shopper::forms.actions.delete'))
                     ->requiresConfirmation()
                     ->action(function (Collection $records): void {
@@ -123,8 +123,8 @@ class Browse extends AbstractPageComponent implements HasActions, HasSchemas, Ha
                     })
                     ->deselectRecordsAfterCompletion(),
                 BulkAction::make('enabled')
-                    ->authorize('edit_attributes')
-                    ->visible(shopper()->auth()->user()->can('edit_attributes'))
+                    ->authorize('attributes.edit')
+                    ->visible(shopper()->auth()->user()->can('attributes.edit'))
                     ->label(__('shopper::forms.actions.enable'))
                     ->icon(Untitledui::CheckVerified)
                     ->action(function (Collection $records): void {
@@ -141,15 +141,15 @@ class Browse extends AbstractPageComponent implements HasActions, HasSchemas, Ha
                     })
                     ->deselectRecordsAfterCompletion(),
                 BulkAction::make('disabled')
-                    ->authorize('edit_attributes')
-                    ->visible(shopper()->auth()->user()->can('edit_attributes'))
+                    ->authorize('attributes.edit')
+                    ->visible(shopper()->auth()->user()->can('attributes.edit'))
                     ->label(__('shopper::forms.actions.disable'))
                     ->icon(Untitledui::SlashCircle01)
                     ->action(function (Collection $records): void {
                         $records->each->updateStatus(false); // @phpstan-ignore-line
 
                         Notification::make()
-                            ->title(__('shopper::components.tables.status.updated'))
+                            ->title(__('shopper::layout.status.updated'))
                             ->body(
                                 __('shopper::notifications.disabled', [
                                     'item' => __('shopper::pages/attributes.single'),

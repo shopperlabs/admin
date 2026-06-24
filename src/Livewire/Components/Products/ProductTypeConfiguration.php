@@ -13,7 +13,6 @@ use Filament\Schemas\Schema;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Reactive;
 use Livewire\Component;
-use Shopper\Core\Enum\ProductType;
 use Shopper\Traits\HandlesAuthorizationExceptions;
 use Shopper\Traits\SaveSettings;
 
@@ -28,14 +27,14 @@ class ProductTypeConfiguration extends Component implements HasActions, HasSchem
     use SaveSettings;
 
     #[Reactive]
-    public ?ProductType $defaultProductType = null;
+    public ?string $defaultProductType = null;
 
     public bool $hasConfig = false;
 
     public function mount(): void
     {
         $this->form->fill([
-            'hasConfig' => (bool) $this->defaultProductType?->value,
+            'hasConfig' => (bool) $this->defaultProductType,
         ]);
     }
 
@@ -49,7 +48,9 @@ class ProductTypeConfiguration extends Component implements HasActions, HasSchem
                     ->debounce()
                     ->live()
                     ->afterStateUpdated(function (bool $state): void {
-                        $this->saveSettings(['default_product_type' => $state ? $this->defaultProductType?->value : null]);
+                        $this->authorize('system.settings');
+
+                        $this->saveSettings(['default_product_type' => $state ? $this->defaultProductType : null]);
 
                         $this->dispatch('product-type.updated');
                     })

@@ -23,6 +23,8 @@ use Shopper\Core\Events\Orders\OrderPaid;
 use Shopper\Core\Models\Contracts\Order;
 use Shopper\Livewire\Pages\AbstractPageComponent;
 use Shopper\Payment\Services\PaymentProcessingService;
+use Shopper\Sidebar\Breadcrumbs\Breadcrumb;
+use Shopper\Sidebar\Traits\WithBreadcrumbs;
 use Shopper\Traits\HandlesAuthorizationExceptions;
 
 class Detail extends AbstractPageComponent implements HasActions, HasSchemas
@@ -30,13 +32,21 @@ class Detail extends AbstractPageComponent implements HasActions, HasSchemas
     use HandlesAuthorizationExceptions;
     use InteractsWithActions;
     use InteractsWithSchemas;
+    use WithBreadcrumbs;
 
     #[Locked]
     public Order $order;
 
+    public function getBreadcrumbs(): array
+    {
+        return [
+            new Breadcrumb(text: '#'.$this->order->number),
+        ];
+    }
+
     public function mount(): void
     {
-        $this->authorize('read_orders');
+        $this->authorize('orders.read');
 
         $this->order->load('customer', 'channel');
     }
@@ -50,7 +60,7 @@ class Detail extends AbstractPageComponent implements HasActions, HasSchemas
     {
         return Action::make('cancelOrder')
             ->label(__('shopper::forms.actions.cancel_order'))
-            ->authorize('edit_orders')
+            ->authorize('orders.edit')
             ->visible($this->order->canBeCancelled())
             ->action(function (): void {
                 $this->order->update([
@@ -74,7 +84,7 @@ class Detail extends AbstractPageComponent implements HasActions, HasSchemas
     {
         return Action::make('startProcessing')
             ->label(__('shopper::forms.actions.start_processing'))
-            ->authorize('edit_orders')
+            ->authorize('orders.edit')
             ->visible($this->order->isNew())
             ->action(function (): void {
                 $this->order->update(['status' => OrderStatus::Processing]);
@@ -93,7 +103,7 @@ class Detail extends AbstractPageComponent implements HasActions, HasSchemas
     {
         return Action::make('markPaid')
             ->label(__('shopper::forms.actions.mark_paid'))
-            ->authorize('edit_orders')
+            ->authorize('orders.edit')
             ->visible($this->order->isPaymentPending() || $this->order->isPaymentAuthorized())
             ->action(function (): void {
                 $data = ['payment_status' => PaymentStatus::Paid];
@@ -120,7 +130,7 @@ class Detail extends AbstractPageComponent implements HasActions, HasSchemas
     {
         return Action::make('markComplete')
             ->label(__('shopper::forms.actions.mark_complete'))
-            ->authorize('edit_orders')
+            ->authorize('orders.edit')
             ->visible($this->order->isProcessing() && $this->order->isPaid())
             ->action(function (): void {
                 $this->order->update(['status' => OrderStatus::Completed]);
@@ -142,7 +152,7 @@ class Detail extends AbstractPageComponent implements HasActions, HasSchemas
         return Action::make('capturePayment')
             ->label(__('shopper::forms.actions.capture_payment'))
             ->icon(Untitledui::CreditCardDown)
-            ->authorize('edit_orders')
+            ->authorize('orders.edit')
             ->visible($this->order->isPaymentAuthorized())
             ->requiresConfirmation()
             ->modalIcon(Untitledui::CreditCardDown)
@@ -189,7 +199,7 @@ class Detail extends AbstractPageComponent implements HasActions, HasSchemas
             ->label(__('shopper::forms.actions.archive'))
             ->color('danger')
             ->icon(Untitledui::Archive)
-            ->authorize('edit_orders')
+            ->authorize('orders.edit')
             ->visible(! $this->order->isCompleted() && ! $this->order->isPaid())
             ->requiresConfirmation()
             ->modalHeading(__('shopper::pages/orders.modals.archived_number', ['number' => $this->order->number]))

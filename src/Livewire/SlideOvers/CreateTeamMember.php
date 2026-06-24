@@ -7,7 +7,7 @@ namespace Shopper\Livewire\SlideOvers;
 use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
-use Filament\Forms\Components\Radio;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
@@ -50,7 +50,7 @@ class CreateTeamMember extends SlideOverComponent implements HasActions, HasSche
 
     public function mount(): void
     {
-        $this->authorize('access_setting');
+        $this->authorize('system.settings');
 
         $this->title = __('shopper::pages/settings/staff.add_admin');
 
@@ -72,6 +72,7 @@ class CreateTeamMember extends SlideOverComponent implements HasActions, HasSche
                             ->label(__('shopper::forms.label.password'))
                             ->password()
                             ->revealable()
+                            ->inlineSuffix()
                             ->required()
                             ->hintAction(
                                 Action::make(__('shopper::words.generate'))
@@ -101,13 +102,14 @@ class CreateTeamMember extends SlideOverComponent implements HasActions, HasSche
                 Section::make(__('shopper::pages/settings/staff.role_information'))
                     ->description(__('shopper::pages/settings/staff.role_information_summary'))
                     ->schema([
-                        Radio::make('role_id')
+                        CheckboxList::make('roles')
                             ->label(__('shopper::pages/settings/staff.choose_role'))
                             ->options(
                                 Role::query()
                                     ->where('name', '<>', config('shopper.admin.roles.user'))
                                     ->pluck('display_name', 'id')
                             )
+                            ->columns()
                             ->required(),
                     ]),
                 Callout::make(__('shopper::words.attention_needed'))
@@ -119,7 +121,7 @@ class CreateTeamMember extends SlideOverComponent implements HasActions, HasSche
 
     public function store(): void
     {
-        $this->authorize('access_setting');
+        $this->authorize('system.settings');
 
         $data = $this->form->getState();
         $userModel = config('auth.providers.users.model');
@@ -137,10 +139,7 @@ class CreateTeamMember extends SlideOverComponent implements HasActions, HasSche
             'email_verified_at' => now()->toDateTimeString(),
         ]);
 
-        /** @var Role $role */
-        $role = Role::findById((int) $data['role_id']);
-
-        $user->assignRole([$role->name]);
+        $user->assignRole($data['roles']);
 
         $this->dispatch('teamUpdate');
 
@@ -150,9 +149,11 @@ class CreateTeamMember extends SlideOverComponent implements HasActions, HasSche
 
         /** @var Model $user */
         Notification::make()
-            ->body(__('shopper::notifications.create', ['item' => $user->full_name]))
+            ->title(__('shopper::notifications.create', ['item' => $user->full_name]))
             ->success()
             ->send();
+
+        $this->dispatch('admin.created');
 
         $this->closePanel();
     }

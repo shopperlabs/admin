@@ -63,7 +63,7 @@ class AddVariant extends SlideOverComponent implements HasActions, HasSchemas
 
     public function mount(): void
     {
-        $this->authorize('add_products');
+        $this->authorize('products.variants.create');
 
         $this->form->fill();
     }
@@ -97,7 +97,7 @@ class AddVariant extends SlideOverComponent implements HasActions, HasSchemas
                                             ->label(__('shopper::pages/products.modals.variants.options.title'))
                                             ->state(
                                                 new HtmlString(Blade::render(<<<'BLADE'
-                                                    <p class="max-w-2xl text-sm text-gray-500 dark:text-gray-400">
+                                                    <p class="max-w-2xl text-sm text-sh-fg-muted">
                                                         {{ __('shopper::pages/products.modals.variants.options.description') }}
                                                     </p>
                                                 BLADE))
@@ -173,7 +173,7 @@ class AddVariant extends SlideOverComponent implements HasActions, HasSchemas
                                 TextEntry::make('stock')
                                     ->label(__('shopper::pages/products.stock_inventory_heading'))
                                     ->state(new HtmlString(Blade::render(<<<'BLADE'
-                                        <p class="max-w-2xl text-sm text-gray-500 dark:text-gray-400">
+                                        <p class="max-w-2xl text-sm text-sh-fg-muted">
                                             {{ __('shopper::pages/products.stock_inventory_description', ['item' => __('shopper::pages/products.variants.single')]) }}
                                         </p>
                                     BLADE))),
@@ -204,6 +204,8 @@ class AddVariant extends SlideOverComponent implements HasActions, HasSchemas
 
     public function save(): void
     {
+        $this->authorize('products.variants.create');
+
         $data = $this->form->getState();
 
         if (isset($data['values']) && $this->variantAlreadyExist($data['values'])) {

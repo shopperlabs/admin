@@ -28,6 +28,8 @@ use Shopper\Components\Separator;
 use Shopper\Core\Models\Country;
 use Shopper\Core\Models\Currency;
 use Shopper\Core\Models\Setting;
+use Shopper\Livewire\Concerns\WithSettingsBreadcrumbs;
+use Shopper\Sidebar\Breadcrumbs\Breadcrumb;
 use Shopper\Traits\HandlesAuthorizationExceptions;
 use Shopper\Traits\SaveSettings;
 
@@ -41,13 +43,21 @@ class General extends Component implements HasActions, HasSchemas
     use InteractsWithActions;
     use InteractsWithSchemas;
     use SaveSettings;
+    use WithSettingsBreadcrumbs;
 
     /** @var array<string, mixed>|null */
     public ?array $data = [];
 
+    public function settingsPageBreadcrumbs(): array
+    {
+        return [
+            new Breadcrumb(text: __('shopper::pages/settings/global.general.title')),
+        ];
+    }
+
     public function mount(): void
     {
-        $this->authorize('access_setting');
+        $this->authorize('system.settings');
 
         /** @var Collection<int, Setting> $settings */
         $settings = Setting::query()->whereIn('key', [
@@ -203,7 +213,7 @@ class General extends Component implements HasActions, HasSchemas
                             ->prefix(
                                 fn (): HtmlString => new HtmlString(Blade::render(<<<'Blade'
                                     <x-shopper::icons.facebook
-                                        class="size-5 text-gray-400 dark:text-gray-500"
+                                        class="size-5 text-sh-fg-muted"
                                         aria-hidden="true"
                                     />
                                 Blade))
@@ -217,7 +227,7 @@ class General extends Component implements HasActions, HasSchemas
                                     ->prefix(
                                         fn (): HtmlString => new HtmlString(Blade::render(<<<'Blade'
                                             <x-shopper::icons.instagram
-                                                class="size-5 text-gray-400 dark:text-gray-500"
+                                                class="size-5 text-sh-fg-muted"
                                                 aria-hidden="true"
                                             />
                                         Blade))
@@ -229,7 +239,7 @@ class General extends Component implements HasActions, HasSchemas
                                     ->prefix(
                                         fn (): HtmlString => new HtmlString(Blade::render(<<<'Blade'
                                             <x-shopper::icons.twitter
-                                                class="size-4 text-gray-400 dark:text-gray-500"
+                                                class="size-4 text-sh-fg-muted"
                                                 aria-hidden="true"
                                             />
                                         Blade))
@@ -245,6 +255,8 @@ class General extends Component implements HasActions, HasSchemas
 
     public function store(): void
     {
+        $this->authorize('system.settings');
+
         $this->saveSettings($this->form->getState());
 
         Notification::make()

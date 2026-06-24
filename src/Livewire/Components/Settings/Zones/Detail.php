@@ -12,6 +12,7 @@ use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Isolate;
 use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Reactive;
 use Livewire\Component;
@@ -22,6 +23,7 @@ use Shopper\Traits\HandlesAuthorizationExceptions;
 /**
  * @property-read Zone $zone
  */
+#[Isolate]
 #[Lazy]
 class Detail extends Component implements HasActions, HasSchemas
 {
@@ -46,15 +48,15 @@ class Detail extends Component implements HasActions, HasSchemas
     public function deleteAction(): Action
     {
         return DeleteAction::make('delete')
-            ->authorize('access_setting')
+            ->authorize('system.settings')
             ->record($this->zone)
             ->icon(Untitledui::Trash03)
             ->iconButton()
             ->successNotificationTitle(__('shopper::notifications.delete', ['item' => __('shopper::pages/settings/zones.single')]))
             ->after(function (): void {
-                $this->reset('zone');
+                unset($this->zone);
 
-                $this->dispatch('refresh-zones');
+                $this->dispatch('zone-deleted');
             });
     }
 
@@ -65,8 +67,8 @@ class Detail extends Component implements HasActions, HasSchemas
             ->icon(Untitledui::Edit03)
             ->action(fn (array $arguments) => $this->dispatch(
                 'openPanel',
-                component: 'shopper-slide-overs.zone-form',
-                arguments: ['zoneId' => $arguments['id']]
+                'shopper-slide-overs.zone-form',
+                ['zoneId' => $arguments['id']]
             ));
     }
 

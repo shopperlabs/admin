@@ -37,7 +37,7 @@ class GenerateVariants extends SlideOverComponent
 
     public function mount(): void
     {
-        $this->authorize('edit_product_variants');
+        $this->authorize('products.variants.edit');
 
         $this->product->loadMissing(['options', 'options.values']);
 
@@ -46,7 +46,7 @@ class GenerateVariants extends SlideOverComponent
 
     public function generate(): void
     {
-        $this->authorize('edit_product_variants');
+        $this->authorize('products.variants.edit');
 
         $this->variants = app()->call(SaveProductVariantsAction::class, [
             'product' => $this->product,

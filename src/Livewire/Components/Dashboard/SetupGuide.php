@@ -13,6 +13,8 @@ use Shopper\Core\Models\Contracts\Product as ProductContract;
 use Shopper\Core\Models\Contracts\TaxZone as TaxZoneContract;
 use Shopper\Core\Models\PaymentMethod;
 use Shopper\Core\Models\Zone;
+use Shopper\Models\Contracts\ShopperUser;
+use Shopper\Traits\AuthorizesSettingsAccess;
 use Shopper\Traits\SaveSettings;
 
 /**
@@ -23,6 +25,7 @@ use Shopper\Traits\SaveSettings;
  */
 final class SetupGuide extends Component
 {
+    use AuthorizesSettingsAccess;
     use SaveSettings;
 
     #[Locked]
@@ -36,7 +39,9 @@ final class SetupGuide extends Component
             return;
         }
 
-        if ($this->isComplete && auth()->user()?->can('access_setting')) {
+        $user = shopper()->auth()->user();
+
+        if ($this->isComplete && $user instanceof ShopperUser && ($user->isAdmin() || $user->can('system.settings'))) {
             $this->markComplete();
         }
     }
@@ -57,35 +62,35 @@ final class SetupGuide extends Component
                 'completed' => resolve(ProductContract::class)::query()->exists(),
                 'icon' => 'untitledui-package',
                 'route' => 'shopper.products.index',
-                'permission' => 'add_products',
+                'permission' => 'products.create',
             ],
             [
                 'key' => 'create_collection',
                 'completed' => resolve(CollectionContract::class)::query()->exists(),
                 'icon' => 'untitledui-layers-three',
                 'route' => 'shopper.collections.index',
-                'permission' => 'add_collections',
+                'permission' => 'collections.create',
             ],
             [
                 'key' => 'setup_zones',
                 'completed' => Zone::query()->where('is_enabled', true)->exists(),
                 'icon' => 'untitledui-globe-05',
                 'route' => 'shopper.settings.zones',
-                'permission' => 'access_setting',
+                'permission' => 'system.settings',
             ],
             [
                 'key' => 'setup_payments',
                 'completed' => PaymentMethod::query()->where('is_enabled', true)->exists(),
                 'icon' => 'untitledui-credit-card-02',
                 'route' => 'shopper.settings.payment-methods',
-                'permission' => 'access_setting',
+                'permission' => 'system.settings',
             ],
             [
                 'key' => 'setup_taxes',
                 'completed' => resolve(TaxZoneContract::class)::query()->exists(),
                 'icon' => 'untitledui-receipt-check',
                 'route' => 'shopper.settings.taxes',
-                'permission' => 'access_setting',
+                'permission' => 'system.settings',
             ],
         ];
     }
@@ -110,7 +115,7 @@ final class SetupGuide extends Component
 
     public function complete(): void
     {
-        $this->authorize('access_setting');
+        $this->authorizeSettingsAccess();
 
         $this->markComplete();
     }

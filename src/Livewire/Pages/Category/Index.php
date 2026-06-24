@@ -37,7 +37,7 @@ class Index extends AbstractPageComponent implements HasActions, HasSchemas, Has
 
     public function mount(): void
     {
-        $this->authorize('browse_categories');
+        $this->authorize('categories.browse');
     }
 
     public function table(Table $table): Table
@@ -81,12 +81,12 @@ class Index extends AbstractPageComponent implements HasActions, HasSchemas, Has
                     ->action(
                         fn (Category $record) => $this->dispatch(
                             'openPanel',
-                            component: 'shopper-slide-overs.category-form',
-                            arguments: ['category' => $record]
+                            'shopper-slide-overs.category-form',
+                            ['category' => $record]
                         )
                     )
-                    ->authorize('edit_categories')
-                    ->visible($this->getUser()->can('edit_categories')),
+                    ->authorize('categories.edit')
+                    ->visible($this->getUser()->can('categories.edit')),
                 Action::make('delete')
                     ->label(__('shopper::forms.actions.delete'))
                     ->icon(Untitledui::Trash03)
@@ -95,13 +95,13 @@ class Index extends AbstractPageComponent implements HasActions, HasSchemas, Has
                     ->color('danger')
                     ->requiresConfirmation()
                     ->action(fn (Category $record) => $record->delete())
-                    ->authorize('delete_categories')
-                    ->visible($this->getUser()->can('delete_categories')),
+                    ->authorize('categories.delete')
+                    ->visible($this->getUser()->can('categories.delete')),
             ])
             ->groupedBulkActions([
                 BulkAction::make('enabled')
-                    ->authorize('edit_categories')
-                    ->visible($this->getUser()->can('edit_categories'))
+                    ->authorize('categories.edit')
+                    ->visible($this->getUser()->can('categories.edit'))
                     ->label(__('shopper::forms.actions.enable'))
                     ->icon(Untitledui::CheckVerified)
                     ->action(function (Collection $records): void {
@@ -118,8 +118,8 @@ class Index extends AbstractPageComponent implements HasActions, HasSchemas, Has
                     })
                     ->deselectRecordsAfterCompletion(),
                 BulkAction::make('disabled')
-                    ->authorize('edit_categories')
-                    ->visible($this->getUser()->can('edit_categories'))
+                    ->authorize('categories.edit')
+                    ->visible($this->getUser()->can('categories.edit'))
                     ->label(__('shopper::forms.actions.disable'))
                     ->icon(Untitledui::SlashCircle01)
                     ->action(function (Collection $records): void {
@@ -151,8 +151,8 @@ class Index extends AbstractPageComponent implements HasActions, HasSchemas, Has
                             ->success()
                             ->send();
                     })
-                    ->authorize('delete_categories')
-                    ->visible($this->getUser()->can('delete_categories'))
+                    ->authorize('categories.delete')
+                    ->visible($this->getUser()->can('categories.delete'))
                     ->deselectRecordsAfterCompletion(),
             ])
             ->persistFiltersInSession()
@@ -165,7 +165,7 @@ class Index extends AbstractPageComponent implements HasActions, HasSchemas, Has
                     ->action(
                         fn () => $this->dispatch(
                             'openPanel',
-                            component: 'shopper-slide-overs.re-order-categories'
+                            'shopper-slide-overs.re-order-categories'
                         )
                     ),
             ]);

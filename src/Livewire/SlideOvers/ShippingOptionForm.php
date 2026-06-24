@@ -54,7 +54,7 @@ class ShippingOptionForm extends SlideOverComponent implements HasActions, HasSc
 
     public function mount(?int $optionId = null): void
     {
-        $this->authorize('access_setting');
+        $this->authorize('system.settings');
 
         $this->option = CarrierOption::query()
             ->where('zone_id', $this->zoneId)
@@ -117,7 +117,7 @@ class ShippingOptionForm extends SlideOverComponent implements HasActions, HasSc
 
     public function store(): void
     {
-        $this->authorize('access_setting');
+        $this->authorize('system.settings');
 
         $data = array_merge($this->form->getState(), ['zone_id' => $this->zoneId]);
 

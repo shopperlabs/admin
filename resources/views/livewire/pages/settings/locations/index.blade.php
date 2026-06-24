@@ -1,18 +1,7 @@
 <x-shopper::container>
-    <x-shopper::breadcrumb
-        :back="route('shopper.settings.index')"
-        :current="__('shopper::pages/settings/global.location.menu')"
-    >
-        <x-untitledui-chevron-left class="size-4 shrink-0 text-gray-300 dark:text-gray-600" aria-hidden="true" />
-        <x-shopper::breadcrumb.link
-            :link="route('shopper.settings.index')"
-            :title="__('shopper::pages/settings/global.menu')"
-        />
-    </x-shopper::breadcrumb>
-
-    <x-shopper::heading class="my-6" :title="__('shopper::pages/settings/global.location.menu')">
+    <x-shopper::heading :title="__('shopper::pages/settings/global.location.menu')">
         <x-slot name="action">
-            @can('add_inventories')
+            @can('inventories.create')
                 <div class="flex">
                     <x-filament::button tag="a" :href="route('shopper.settings.locations.create')" wire:navigate>
                         {{ __('shopper::forms.actions.add_label', ['label' => __('shopper::pages/settings/global.location.single')]) }}
@@ -29,14 +18,14 @@
                     :title="__('shopper::pages/settings/global.location.menu')"
                     :description="__('shopper::pages/settings/global.location.description')"
                 />
-                <x-filament::section.description class="mt-4 text-sm text-gray-500 dark:text-gray-400">
+                <x-filament::section.description class="mt-4 text-sm text-sh-fg-muted">
                     {{ __('shopper::pages/settings/global.location.count', ['count' => $inventories->count()]) }}
                 </x-filament::section.description>
             </div>
         </div>
         <div class="mt-5 lg:col-span-2 lg:mt-0">
             <x-shopper::card class="[&>div:first-of-type]:p-0">
-                <ul class="divide-y divide-gray-200 dark:divide-white/10">
+                <ul class="divide-y divide-sh-border">
                     @foreach ($inventories as $inventory)
                         <li class="p-4">
                             <div class="flex items-end gap-6">
@@ -59,7 +48,7 @@
                                         <div class="sm:flex sm:gap-x-4">
                                             @if ($inventory->country)
                                                 <div
-                                                    class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400"
+                                                    class="flex items-center gap-2 text-sm text-sh-fg-muted"
                                                 >
                                                     <img
                                                         src="{{ $inventory->country->svg_flag }}"
@@ -71,29 +60,29 @@
                                             @endif
 
                                             <div
-                                                class="mt-2 flex items-center gap-2 text-sm text-gray-500 sm:mt-0 dark:text-gray-400"
+                                                class="mt-2 flex items-center gap-2 text-sm text-sh-fg-muted sm:mt-0"
                                             >
                                                 <x-untitledui-marker-pin-02
-                                                    class="size-5 shrink-0 text-gray-400 dark:text-gray-500"
+                                                    class="size-5 shrink-0 text-sh-fg-muted"
                                                     aria-hidden="true"
                                                 />
                                                 {{ $inventory->city }}
                                             </div>
                                             <div
-                                                class="mt-2 flex items-center gap-2 text-sm text-gray-500 sm:mt-0 dark:text-gray-400"
+                                                class="mt-2 flex items-center gap-2 text-sm text-sh-fg-muted sm:mt-0"
                                             >
                                                 <x-untitledui-phone
-                                                    class="size-5 shrink-0 text-gray-400 dark:text-gray-500"
+                                                    class="size-5 shrink-0 text-sh-fg-muted"
                                                     aria-hidden="true"
                                                 />
                                                 {{ $inventory->phone_number ?? __('shopper::words.number_not_set') }}
                                             </div>
                                         </div>
                                         <div
-                                            class="mt-2 flex items-center text-sm text-gray-500 sm:mt-0 dark:text-gray-400"
+                                            class="mt-2 flex items-center text-sm text-sh-fg-muted sm:mt-0"
                                         >
                                             <x-untitledui-calendar
-                                                class="size-5 shrink-0 text-gray-400 dark:text-gray-500"
+                                                class="size-5 shrink-0 text-sh-fg-muted"
                                                 aria-hidden="true"
                                             />
                                             <span class="ml-2">
@@ -111,7 +100,7 @@
                                 <div class="flex items-center gap-2">
                                     <x-shopper::link
                                         :href="route('shopper.settings.locations.edit', $inventory)"
-                                        class="inline-flex size-10 items-center justify-center rounded-full hover:bg-gray-50 dark:hover:bg-gray-900/20"
+                                        class="inline-flex size-10 items-center justify-center rounded-full hover:bg-sh-muted"
                                     >
                                         <x-untitledui-edit-03
                                             class="text-primary-600 dark:text-primary-500 size-5"

@@ -18,7 +18,6 @@ use Filament\Schemas\Schema;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
-use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Shopper\Components\Form\AddressField;
 use Shopper\Components\Section;
@@ -35,7 +34,6 @@ class InventoryForm extends Component implements HasActions, HasSchemas
     use InteractsWithActions;
     use InteractsWithSchemas;
 
-    #[Locked]
     public Model&Inventory $inventory;
 
     /** @var array<string, mixed>|null */
@@ -104,7 +102,7 @@ class InventoryForm extends Component implements HasActions, HasSchemas
 
     public function store(): void
     {
-        $this->authorize($this->inventory->id ? 'edit_inventories' : 'add_inventories');
+        $this->authorize($this->inventory->id ? 'inventories.edit' : 'inventories.create');
 
         if ($this->inventory->id) {
             $this->inventory->update($this->form->getState());

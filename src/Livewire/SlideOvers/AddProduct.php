@@ -65,7 +65,7 @@ class AddProduct extends SlideOverComponent implements HasActions, HasSchemas
 
     public function mount(): void
     {
-        $this->authorize('add_products');
+        $this->authorize('products.create');
 
         $this->currentProductType = shopper_setting('default_product_type');
 
@@ -240,7 +240,7 @@ class AddProduct extends SlideOverComponent implements HasActions, HasSchemas
                             TextEntry::make('stock')
                                 ->label(__('shopper::pages/products.stock_inventory_heading'))
                                 ->state(new HtmlString(Blade::render(<<<'BLADE'
-                                    <p class="max-w-2xl text-sm text-gray-500 dark:text-gray-400">
+                                    <p class="max-w-2xl text-sm text-sh-fg-muted">
                                         {{ __('shopper::pages/products.stock_inventory_description', ['item' => __('shopper::pages/products.single')]) }}
                                     </p>
                                 BLADE))),

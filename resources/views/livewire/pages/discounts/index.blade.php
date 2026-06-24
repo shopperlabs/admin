@@ -1,10 +1,9 @@
 <x-shopper::container class="py-5">
     <x-shopper::heading :title="__('shopper::pages/discounts.menu')">
         <x-slot name="action">
-            @can('add_discounts')
+            @can('discounts.create')
                 <x-filament::button
-                    type="button"
-                    wire:click="$dispatch('openPanel', { component: 'shopper-slide-overs.discount-form' })"
+                    wire:click="$dispatch('openPanel', { component: 'shopper-slide-overs.add-promotion' })"
                 >
                     {{ __('shopper::forms.actions.add_label', ['label' => __('shopper::pages/discounts.single')]) }}
                 </x-filament::button>

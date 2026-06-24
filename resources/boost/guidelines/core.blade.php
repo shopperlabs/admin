@@ -41,8 +41,8 @@ Use `{{ $assist->artisanCommand('make:shopper-page {PageName}') }}` to create a 
     namespace App\Livewire\Shopper;
 
     use App\Models\ShippingMethod;
-    use Filament\Forms\Concerns\InteractsWithForms;
-    use Filament\Forms\Contracts\HasForms;
+    use Filament\Schemas\Concerns\InteractsWithSchemas;
+    use Filament\Schemas\Contracts\HasSchemas;
     use Filament\Tables\Columns\TextColumn;
     use Filament\Tables\Concerns\InteractsWithTable;
     use Filament\Tables\Contracts\HasTable;
@@ -50,14 +50,14 @@ Use `{{ $assist->artisanCommand('make:shopper-page {PageName}') }}` to create a 
     use Illuminate\Contracts\View\View;
     use Shopper\Livewire\Pages\AbstractPageComponent;
 
-    class Shipping extends AbstractPageComponent implements HasForms, HasTable
+    class Shipping extends AbstractPageComponent implements HasSchemas, HasTable
     {
-        use InteractsWithForms;
+        use InteractsWithSchemas;
         use InteractsWithTable;
 
         public function mount(): void
         {
-            $this->authorize('browse_shipping'); // Optional authorization
+            $this->authorize('shipping.browse'); // Optional authorization
         }
 
         public function table(Table $table): Table
@@ -91,9 +91,9 @@ Use `{{ $assist->artisanCommand('make:shopper-page {PageName}') }}` to create a 
     <code-snippet name="Blade view for custom page" lang="blade">
     {{-- resources/views/livewire/shopper/shipping.blade.php --}}
     <x-shopper::container>
-        <x-shopper::breadcrumb :back="route('shopper.settings.index')" :current="__('Shipping Methods')">
+        <x-shopper::breadcrumb :back="route('shopper.settings.shop')" :current="__('Shipping Methods')">
             <x-untitledui-chevron-left class="size-4 shrink-0 text-gray-300 dark:text-gray-600" aria-hidden="true" />
-            <x-shopper::breadcrumb.link :link="route('shopper.settings.index')" :title="__('Settings')" />
+            <x-shopper::breadcrumb.link :link="route('shopper.settings.shop')" :title="__('Settings')" />
         </x-shopper::breadcrumb>
 
         <x-shopper::heading class="my-6" :title="__('Shipping Methods')" />
@@ -213,7 +213,7 @@ To create a completely new sidebar group instead of adding to an existing one:
 
                 $group->item(__('Shipping'), function (Item $item): void {
                     $item->weight(1);
-                    $item->setAuthorized($this->user->hasPermissionTo('browse_shipping'));
+                    $item->setAuthorized($this->user->hasPermissionTo('shipping.browse'));
                     $item->useSpa();
                     $item->route('shopper.shipping.index');
                     $item->setIcon('untitledui-truck-01');
@@ -522,11 +522,11 @@ Shopper uses Spatie Laravel Permission. Check permissions in Livewire components
     // In Livewire component
     public function mount(): void
     {
-        $this->authorize('browse_products');
+        $this->authorize('products.browse');
     }
 
     // In Blade
-    @can('add_products')
+    @can('products.create')
         <x-filament::button>Add Product</x-filament::button>
     @endcan
     </code-snippet>

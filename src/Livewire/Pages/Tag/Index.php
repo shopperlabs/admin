@@ -36,7 +36,7 @@ class Index extends AbstractPageComponent implements HasActions, HasSchemas, Has
 
     public function mount(): void
     {
-        $this->authorize('browse_tags');
+        $this->authorize('tags.browse');
     }
 
     public function table(Table $table): Table
@@ -73,8 +73,8 @@ class Index extends AbstractPageComponent implements HasActions, HasSchemas, Has
                             ->send();
                     })
                     ->modalSubmitActionLabel(__('shopper::forms.actions.update'))
-                    ->authorize('edit_tags')
-                    ->visible(shopper()->auth()->user()->can('edit_tags')),
+                    ->authorize('tags.edit')
+                    ->visible(shopper()->auth()->user()->can('tags.edit')),
                 Action::make('delete')
                     ->label(__('shopper::forms.actions.delete'))
                     ->icon(Untitledui::Trash03)
@@ -90,13 +90,13 @@ class Index extends AbstractPageComponent implements HasActions, HasSchemas, Has
                             ->success()
                             ->send();
                     })
-                    ->authorize('delete_tags')
-                    ->visible(shopper()->auth()->user()->can('delete_tags')),
+                    ->authorize('tags.delete')
+                    ->visible(shopper()->auth()->user()->can('tags.delete')),
             ])
             ->groupedBulkActions([
                 DeleteBulkAction::make()
-                    ->authorize('delete_tags')
-                    ->visible(shopper()->auth()->user()->can('delete_tags'))
+                    ->authorize('tags.delete')
+                    ->visible(shopper()->auth()->user()->can('tags.delete'))
                     ->label(__('shopper::forms.actions.delete'))
                     ->requiresConfirmation()
                     ->action(function (Collection $records): void {
@@ -108,7 +108,8 @@ class Index extends AbstractPageComponent implements HasActions, HasSchemas, Has
                             ->send();
                     })
                     ->deselectRecordsAfterCompletion(),
-            ]);
+            ])
+            ->emptyState(view('shopper::livewire.tables.empty-states.tags'));
     }
 
     public function tagForm(Schema $schema): Schema
@@ -131,6 +132,7 @@ class Index extends AbstractPageComponent implements HasActions, HasSchemas, Has
     public function createAction(): Action
     {
         return Action::make('create')
+            ->authorize('tags.create')
             ->label(__('shopper::forms.actions.create'))
             ->schema($this->tagForm(...))
             ->modalWidth(Width::Medium)

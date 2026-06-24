@@ -21,18 +21,22 @@ use Filament\Schemas\Schema;
 use Filament\Support\Enums\Width;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Mckenziearts\Icons\Untitledui\Enums\Untitledui;
+use Shopper\Livewire\Concerns\WithSettingsBreadcrumbs;
 use Shopper\Models\Permission;
 use Shopper\Models\Role;
+use Shopper\Sidebar\Breadcrumbs\Breadcrumb;
 use Shopper\Traits\HandlesAuthorizationExceptions;
 
 /**
- * @property Schema $form
+ * @property-read Schema $form
  */
 #[Layout('shopper::components.layouts.setting')]
 class RolePermission extends Component implements HasActions, HasSchemas
@@ -40,6 +44,7 @@ class RolePermission extends Component implements HasActions, HasSchemas
     use HandlesAuthorizationExceptions;
     use InteractsWithActions;
     use InteractsWithSchemas;
+    use WithSettingsBreadcrumbs;
 
     #[Locked]
     public Role $role;
@@ -47,9 +52,25 @@ class RolePermission extends Component implements HasActions, HasSchemas
     /** @var array<string, mixed>|null */
     public ?array $data = [];
 
+    #[Url(as: 'tab', except: '')]
+    public string $activeTab = 'role';
+
+    public function settingsPageBreadcrumbs(): array
+    {
+        return [
+            new Breadcrumb(
+                text: __('shopper::pages/settings/staff.title'),
+                url: Route::has('shopper.settings.users')
+                    ? route('shopper.settings.users')
+                    : null,
+            ),
+            new Breadcrumb(text: $this->role->display_name ?? $this->role->name),
+        ];
+    }
+
     public function mount(): void
     {
-        $this->authorize('view_users');
+        $this->authorize('system.users');
 
         $this->form->fill($this->role->toArray());
     }
@@ -83,7 +104,7 @@ class RolePermission extends Component implements HasActions, HasSchemas
         return DeleteAction::make('delete')
             ->label(__('shopper::forms.actions.delete'))
             ->icon(Untitledui::Trash03)
-            ->authorize('access_setting')
+            ->authorize('system.settings')
             ->visible($this->role->can_be_removed)
             ->record($this->role)
             ->successNotificationTitle(__('shopper::notifications.users_roles.role_deleted'))
@@ -96,7 +117,7 @@ class RolePermission extends Component implements HasActions, HasSchemas
             ->label(__('shopper::pages/settings/staff.generate_permissions'))
             ->icon(Untitledui::ShieldZap)
             ->color('gray')
-            ->authorize('access_setting')
+            ->authorize('system.settings')
             ->modalWidth(Width::Medium)
             ->modalHeading(__('shopper::pages/settings/staff.generate_permissions'))
             ->modalDescription(__('shopper::pages/settings/staff.generate_permissions_description'))
@@ -121,7 +142,7 @@ class RolePermission extends Component implements HasActions, HasSchemas
                         $badges = collect(['browse', 'read', 'edit', 'add', 'delete'])
                             ->map(fn (string $prefix): string => Blade::render(
                                 '<x-filament::badge color="gray">{{ $name }}</x-filament::badge>',
-                                ['name' => "{$prefix}_{$resource}"],
+                                ['name' => "{$resource}.{$prefix}"],
                             ))
                             ->implode('');
 
@@ -135,10 +156,10 @@ class RolePermission extends Component implements HasActions, HasSchemas
 
                 Permission::generate($resource, $group);
 
-                $prefixes = ['browse', 'read', 'edit', 'add', 'delete'];
+                $actions = ['browse', 'read', 'edit', 'create', 'delete'];
 
-                foreach ($prefixes as $prefix) {
-                    $this->role->givePermissionTo("{$prefix}_{$resource}");
+                foreach ($actions as $action) {
+                    $this->role->givePermissionTo("{$resource}.{$action}");
                 }
 
                 $this->dispatch('permissionAdded');
@@ -155,8 +176,8 @@ class RolePermission extends Component implements HasActions, HasSchemas
         return Action::make('createPermission')
             ->label(__('shopper::pages/settings/staff.create_permission'))
             ->icon(Untitledui::Lock04)
-            ->authorize('access_setting')
-            ->modalWidth(Width::ExtraLarge)
+            ->authorize('system.settings')
+            ->modalWidth(Width::Medium)
             ->modalHeading(__('shopper::modals.permissions.new'))
             ->modalDescription(__('shopper::modals.permissions.new_description'))
             ->modalSubmitActionLabel(__('shopper::forms.actions.save'))
@@ -199,7 +220,7 @@ class RolePermission extends Component implements HasActions, HasSchemas
 
     public function save(): void
     {
-        $this->authorize('access_setting');
+        $this->authorize('system.settings');
 
         $this->role->update($this->form->getState());
 

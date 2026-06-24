@@ -51,7 +51,7 @@ class AttributeForm extends SlideOverComponent implements HasActions, HasSchemas
 
     public function mount(?int $attributeId = null): void
     {
-        abort_unless($this->authorize('add_attributes') || $this->authorize('edit_attributes'), 403);
+        abort_unless($this->authorize('attributes.create') || $this->authorize('attributes.edit'), 403);
 
         $this->attribute = Attribute::query()->find($attributeId);
 
@@ -114,8 +114,12 @@ class AttributeForm extends SlideOverComponent implements HasActions, HasSchemas
     public function store(): void
     {
         if ($this->attribute) {
+            $this->authorize('attributes.edit');
+
             $this->attribute->update($this->form->getState());
         } else {
+            $this->authorize('attributes.create');
+
             Attribute::query()->create($this->form->getState());
         }
 

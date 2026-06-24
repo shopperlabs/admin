@@ -33,8 +33,7 @@ use Shopper\Core\Models\Country;
 use Shopper\Core\Models\Currency;
 use Shopper\Core\Models\Inventory;
 use Shopper\Core\Models\Setting;
-use Shopper\Facades\Shopper;
-use Shopper\Models\Contracts\ShopperUser;
+use Shopper\Traits\AuthorizesSettingsAccess;
 use Shopper\Traits\SaveSettings;
 
 /**
@@ -42,6 +41,7 @@ use Shopper\Traits\SaveSettings;
  */
 final class InitializationWizard extends Component implements HasActions, HasSchemas
 {
+    use AuthorizesSettingsAccess;
     use InteractsWithActions;
     use InteractsWithSchemas;
     use SaveSettings;
@@ -73,7 +73,7 @@ final class InitializationWizard extends Component implements HasActions, HasSch
 
     public function mount(): void
     {
-        $this->authorizeOnboarding();
+        $this->authorizeSettingsAccess();
 
         $this->countryOptions = self::countryOptions();
         $this->currencyOptions = self::currencyOptions();
@@ -280,7 +280,7 @@ final class InitializationWizard extends Component implements HasActions, HasSch
 
     public function save(): void
     {
-        $this->authorizeOnboarding();
+        $this->authorizeSettingsAccess();
 
         $state = array_intersect_key(
             $this->form->getState(),
@@ -345,7 +345,7 @@ final class InitializationWizard extends Component implements HasActions, HasSch
         return new HtmlString(Blade::render(<<<'Blade'
             <x-dynamic-component
                 :component="'shopper::icons.' . $name"
-                class="size-5 text-gray-400 dark:text-gray-500"
+                class="size-5 text-sh-fg-muted"
                 aria-hidden="true"
             />
         Blade, ['name' => $name]));
@@ -356,6 +356,8 @@ final class InitializationWizard extends Component implements HasActions, HasSch
      */
     private function persistStep(array $keys): void
     {
+        $this->authorizeSettingsAccess();
+
         $allowed = array_intersect($keys, self::ALLOWED_KEYS);
 
         $values = collect($this->data ?? [])
@@ -363,17 +365,6 @@ final class InitializationWizard extends Component implements HasActions, HasSch
             ->all();
 
         $this->saveSettings($values, locked: false);
-    }
-
-    private function authorizeOnboarding(): void
-    {
-        $user = Shopper::auth()->user();
-
-        abort_unless(
-            $user instanceof ShopperUser
-                && ($user->isAdmin() || $user->can('access_setting')),
-            403,
-        );
     }
 
     /**

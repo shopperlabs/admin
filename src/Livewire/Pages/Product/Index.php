@@ -85,7 +85,7 @@ class Index extends AbstractPageComponent implements HasActions, HasSchemas, Has
 
     public function mount(): void
     {
-        $this->authorize('browse_products');
+        $this->authorize('products.browse');
     }
 
     public function table(Table $table): Table
@@ -147,8 +147,8 @@ class Index extends AbstractPageComponent implements HasActions, HasSchemas, Has
                             parameters: ['product' => $record],
                             navigate: true
                         ))
-                        ->authorize('edit_products')
-                        ->visible(shopper()->auth()->user()->can('edit_products')),
+                        ->authorize('products.edit')
+                        ->visible(shopper()->auth()->user()->can('products.edit')),
                     Action::make(__('shopper::forms.actions.delete'))
                         ->icon(Untitledui::Trash03)
                         ->modalIcon(Untitledui::Trash03)
@@ -159,8 +159,8 @@ class Index extends AbstractPageComponent implements HasActions, HasSchemas, Has
 
                             $record->delete();
                         })
-                        ->authorize('delete_products')
-                        ->visible(shopper()->auth()->user()->can('delete_products')),
+                        ->authorize('products.delete')
+                        ->visible(shopper()->auth()->user()->can('products.delete')),
                 ])
                     ->tooltip('Actions'),
             ])

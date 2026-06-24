@@ -20,8 +20,6 @@ use Illuminate\Database\Eloquent\Model;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Mckenziearts\Icons\Untitledui\Enums\Untitledui;
-use Shopper\Core\Enum\OrderStatus;
-use Shopper\Core\Enum\PaymentStatus;
 use Shopper\Core\Models\Contracts\Order;
 use Shopper\Models\Contracts\ShopperUser;
 use Shopper\Traits\HandlesAuthorizationExceptions;
@@ -94,11 +92,11 @@ class Orders extends Component implements HasActions, HasSchemas, HasTable
             ->filters([
                 SelectFilter::make('status')
                     ->label(__('shopper::forms.label.status'))
-                    ->options(OrderStatus::class)
+                    ->options(\Shopper\Core\Enum\OrderStatus::class)
                     ->multiple(),
                 SelectFilter::make('payment_status')
                     ->label(__('shopper::forms.label.payment_status'))
-                    ->options(PaymentStatus::class)
+                    ->options(\Shopper\Core\Enum\PaymentStatus::class)
                     ->multiple(),
                 SelectFilter::make('zone_id')
                     ->label(__('shopper::pages/settings/zones.single'))

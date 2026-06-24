@@ -51,6 +51,10 @@ class CategoryForm extends SlideOverComponent implements HasActions, HasSchemas,
 
     public function mount(?Category $category = null): void
     {
+        $user = shopper()->auth()->user();
+
+        abort_unless($user->can('categories.create') || $user->can('categories.edit'), 403);
+
         $this->category = $category ?? resolve(Category::class)::query()->newModelInstance();
 
         $this->title = $this->category->id
@@ -132,11 +136,11 @@ class CategoryForm extends SlideOverComponent implements HasActions, HasSchemas,
     public function save(): void
     {
         if ($this->category->id) {
-            $this->authorize('edit_categories', $this->category);
+            $this->authorize('categories.edit', $this->category);
 
             $this->category->update($this->form->getState());
         } else {
-            $this->authorize('add_categories');
+            $this->authorize('categories.create');
 
             $category = resolve(Category::class)::query()->create($this->form->getState());
             $this->form->model($category)->saveRelationships();

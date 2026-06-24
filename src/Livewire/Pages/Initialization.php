@@ -7,21 +7,16 @@ namespace Shopper\Livewire\Pages;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
-use Shopper\Facades\Shopper;
-use Shopper\Models\Contracts\ShopperUser;
+use Shopper\Traits\AuthorizesSettingsAccess;
 
 #[Layout('shopper::components.layouts.base')]
 final class Initialization extends Component
 {
+    use AuthorizesSettingsAccess;
+
     public function mount(): void
     {
-        $user = Shopper::auth()->user();
-
-        abort_unless(
-            $user instanceof ShopperUser
-                && ($user->isAdmin() || $user->can('access_setting')),
-            403,
-        );
+        $this->authorizeSettingsAccess();
     }
 
     public function render(): View

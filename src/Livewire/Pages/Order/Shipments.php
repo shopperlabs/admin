@@ -24,6 +24,7 @@ use Filament\Tables\Table;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Livewire\Attributes\On;
+use Livewire\Attributes\Url;
 use Mckenziearts\Icons\Untitledui\Enums\Untitledui;
 use Shopper\Core\Actions\MarkShipmentDeliveredAction;
 use Shopper\Core\Enum\ShipmentStatus;
@@ -40,9 +41,12 @@ class Shipments extends AbstractPageComponent implements HasActions, HasSchemas,
     use InteractsWithSchemas;
     use InteractsWithTable;
 
+    #[Url(as: 'tab', except: 'all')]
+    public ?string $activeTab = null;
+
     public function mount(): void
     {
-        $this->authorize('browse_orders');
+        $this->authorize('orders.browse');
 
         $this->loadDefaultActiveTab();
     }
@@ -137,7 +141,7 @@ class Shipments extends AbstractPageComponent implements HasActions, HasSchemas,
                     ->label(__('shopper::forms.actions.mark_delivered'))
                     ->icon(Untitledui::PackageCheck)
                     ->color('success')
-                    ->authorize('edit_orders')
+                    ->authorize('orders.edit')
                     ->visible(fn (OrderShipping $record): bool => $record->canBeDelivered())
                     ->requiresConfirmation()
                     ->action(function (OrderShipping $record): void {
@@ -152,7 +156,7 @@ class Shipments extends AbstractPageComponent implements HasActions, HasSchemas,
                     ->label(__('shopper::forms.actions.edit'))
                     ->icon(Untitledui::Edit03)
                     ->iconButton()
-                    ->authorize('edit_orders')
+                    ->authorize('orders.edit')
                     ->modalWidth(Width::Large)
                     ->fillForm(fn (OrderShipping $record): array => [
                         'carrier_id' => $record->carrier_id,
@@ -190,8 +194,8 @@ class Shipments extends AbstractPageComponent implements HasActions, HasSchemas,
                     ->tooltip(__('shopper::pages/orders.shipment.manage'))
                     ->action(fn (OrderShipping $record) => $this->dispatch(
                         'openPanel',
-                        component: 'shopper-slide-overs.shipment-detail',
-                        arguments: ['shipment' => $record],
+                        'shopper-slide-overs.shipment-detail',
+                        ['shipment' => $record],
                     )),
             ])
             ->filters([
@@ -210,7 +214,8 @@ class Shipments extends AbstractPageComponent implements HasActions, HasSchemas,
                     ->relationship('carrier', 'name')
                     ->searchable()
                     ->preload(),
-            ]);
+            ])
+            ->emptyState(view('shopper::livewire.tables.empty-states.shipments'));
     }
 
     public function render(): View

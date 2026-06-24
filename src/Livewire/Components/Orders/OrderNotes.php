@@ -25,7 +25,7 @@ class OrderNotes extends Component
 
     public function leaveNotes(): void
     {
-        $this->authorize('edit_orders');
+        $this->authorize('orders.edit');
 
         $this->validate();
 

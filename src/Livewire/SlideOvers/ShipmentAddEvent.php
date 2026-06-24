@@ -50,7 +50,7 @@ class ShipmentAddEvent extends SlideOverComponent implements HasActions, HasSche
 
     public static function panelMaxWidth(): string
     {
-        return '3xl';
+        return '2xl';
     }
 
     public static function destroyOnClose(): bool
@@ -60,7 +60,7 @@ class ShipmentAddEvent extends SlideOverComponent implements HasActions, HasSche
 
     public function mount(): void
     {
-        $this->authorize('read_orders');
+        $this->authorize('orders.read');
 
         $this->form->fill();
 
@@ -124,7 +124,7 @@ class ShipmentAddEvent extends SlideOverComponent implements HasActions, HasSche
 
     public function save(): void
     {
-        $this->authorize('edit_orders');
+        $this->authorize('orders.edit');
 
         $data = $this->form->getState();
 

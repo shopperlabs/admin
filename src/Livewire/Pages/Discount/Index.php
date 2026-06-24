@@ -23,10 +23,13 @@ use Filament\Tables\Table;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Cache;
 use Mckenziearts\Icons\Untitledui\Enums\Untitledui;
+use Shopper\Actions\Store\DuplicateDiscountAction;
 use Shopper\Core\Enum\DiscountApplyTo;
 use Shopper\Core\Enum\DiscountEligibility;
 use Shopper\Core\Enum\DiscountStatus;
+use Shopper\Core\Enum\PromotionSource;
 use Shopper\Core\Models\Discount;
 use Shopper\Livewire\Pages\AbstractPageComponent;
 use Shopper\Traits\HandlesAuthorizationExceptions;
@@ -42,19 +45,31 @@ class Index extends AbstractPageComponent implements HasActions, HasSchemas, Has
 
     public function mount(): void
     {
-        $this->authorize('browse_discounts');
+        $this->authorize('discounts.browse');
     }
 
     public function table(Table $table): Table
     {
         return $table
-            ->query(Discount::with('zone', 'zone.currency')->latest())
+            ->query(Discount::with('zone', 'campaign')->latest())
             ->columns([
                 TextColumn::make('code')
                     ->label(__('shopper::forms.label.code'))
                     ->badge()
+                    ->placeholder('N/A')
                     ->searchable()
                     ->sortable(),
+                TextColumn::make('trigger')
+                    ->label(__('shopper::pages/discounts.method'))
+                    ->badge()
+                    ->formatStateUsing(fn (PromotionSource $state): string => match ($state) {
+                        PromotionSource::Code => __('shopper::pages/discounts.method_code'),
+                        PromotionSource::Automatic => __('shopper::pages/discounts.method_automatic'),
+                    })
+                    ->color(fn (PromotionSource $state): string => match ($state) {
+                        PromotionSource::Code => 'gray',
+                        PromotionSource::Automatic => 'info',
+                    }),
                 TextColumn::make('type')
                     ->label(__('shopper::forms.label.type'))
                     ->searchable()
@@ -77,9 +92,9 @@ class Index extends AbstractPageComponent implements HasActions, HasSchemas, Has
                 TextColumn::make('status')
                     ->label(__('shopper::forms.label.status'))
                     ->badge()
-                    ->formatStateUsing(fn (DiscountStatus $state): string => $state->getLabel())
                     ->icon(fn (DiscountStatus $state): string => $state->getIcon())
-                    ->color(fn (DiscountStatus $state): string => $state->getColor()),
+                    ->color(fn (DiscountStatus $state): string => $state->getColor())
+                    ->formatStateUsing(fn (DiscountStatus $state): string => $state->getLabel()),
                 ViewColumn::make('start_at')
                     ->label(__('shopper::words.date'))
                     ->toggleable()
@@ -99,21 +114,62 @@ class Index extends AbstractPageComponent implements HasActions, HasSchemas, Has
                     ->sortable()
                     ->toggleable()
                     ->toggledHiddenByDefault(),
+                TextColumn::make('campaign.name')
+                    ->label(__('shopper::pages/discounts.campaign'))
+                    ->placeholder('—')
+                    ->toggleable()
+                    ->url(fn (Discount $record): ?string => $record->campaign_id !== null
+                        ? route('shopper.campaigns.edit', $record->campaign_id)
+                        : null),
             ])
             ->recordActions([
                 Action::make('edit')
                     ->label(__('shopper::forms.actions.edit'))
                     ->icon(Untitledui::Edit03)
                     ->iconButton()
-                    ->action(
-                        fn (Discount $record) => $this->dispatch(
-                            'openPanel',
-                            component: 'shopper-slide-overs.discount-form',
-                            arguments: ['discountId' => $record->id]
-                        )
-                    )
-                    ->authorize('edit_discounts')
-                    ->visible($this->getUser()->can('edit_discounts')),
+                    ->url(fn (Discount $record): string => route('shopper.discounts.edit', $record))
+                    ->authorize('discounts.edit')
+                    ->visible($this->getUser()->can('discounts.edit')),
+                Action::make('duplicate')
+                    ->label(__('shopper::pages/discounts.actions.duplicate'))
+                    ->icon(Untitledui::Copy03)
+                    ->iconButton()
+                    ->color('gray')
+                    ->requiresConfirmation()
+                    ->modalHeading(__('shopper::pages/discounts.actions.duplicate_confirm_heading'))
+                    ->modalDescription(__('shopper::pages/discounts.actions.duplicate_confirm_description'))
+                    ->action(function (Discount $record): void {
+                        $this->authorize('discounts.create');
+
+                        $lock = Cache::lock(
+                            "discount:duplicate:{$record->id}:".$this->getUser()->getKey(),
+                            seconds: 5,
+                        );
+
+                        if (! $lock->get()) {
+                            Notification::make()
+                                ->title(__('shopper::pages/discounts.actions.duplicate_in_progress'))
+                                ->warning()
+                                ->send();
+
+                            return;
+                        }
+
+                        try {
+                            $clone = resolve(DuplicateDiscountAction::class)($record);
+                        } finally {
+                            $lock->release();
+                        }
+
+                        Notification::make()
+                            ->title(__('shopper::pages/discounts.actions.duplicate_success', ['code' => $clone->code]))
+                            ->success()
+                            ->send();
+
+                        $this->redirectRoute('shopper.discounts.edit', ['record' => $clone->id], navigate: true);
+                    })
+                    ->authorize('discounts.create')
+                    ->visible($this->getUser()->can('discounts.create')),
                 Action::make('delete')
                     ->label(__('shopper::forms.actions.delete'))
                     ->icon(Untitledui::Trash03)
@@ -122,8 +178,8 @@ class Index extends AbstractPageComponent implements HasActions, HasSchemas, Has
                     ->color('danger')
                     ->requiresConfirmation()
                     ->action(fn (Discount $record) => $record->delete())
-                    ->authorize('delete_discounts')
-                    ->visible($this->getUser()->can('delete_discounts')),
+                    ->authorize('discounts.delete')
+                    ->visible($this->getUser()->can('discounts.delete')),
             ])
             ->groupedBulkActions([
                 DeleteBulkAction::make()
@@ -142,12 +198,21 @@ class Index extends AbstractPageComponent implements HasActions, HasSchemas, Has
                             ->success()
                             ->send();
                     })
-                    ->authorize('delete_discounts')
-                    ->visible($this->getUser()->can('delete_discounts'))
+                    ->authorize('discounts.delete')
+                    ->visible($this->getUser()->can('discounts.delete'))
                     ->deselectRecordsAfterCompletion(),
             ])
             ->filters([
                 TernaryFilter::make('is_active'),
+                SelectFilter::make('trigger')
+                    ->label(__('shopper::pages/discounts.method'))
+                    ->options([
+                        PromotionSource::Code->value => __('shopper::pages/discounts.method_code'),
+                        PromotionSource::Automatic->value => __('shopper::pages/discounts.method_automatic'),
+                    ]),
+                SelectFilter::make('campaign_id')
+                    ->label(__('shopper::pages/discounts.campaign'))
+                    ->relationship('campaign', 'name'),
                 SelectFilter::make('apply_to')
                     ->options(DiscountApplyTo::options()),
                 SelectFilter::make('eligibility')

@@ -32,6 +32,7 @@ return [
 
     'inventory' => [
         'removed' => 'Inventory Successfully removed.',
+        'updated' => 'Stock successfully updated.',
     ],
 
     'initialize' => 'Store successfully setup, you can now manage everything.',
@@ -42,6 +43,7 @@ return [
         'role_added' => 'A role has been successfully created',
         'role_deleted' => 'Role deleted successfully.',
         'admin_deleted' => 'Admin deleted successfully',
+        'user_id_copied' => 'User ID copied to clipboard',
         'permission_add' => 'A new permission has been create and add to this role',
         'permission_revoke' => 'Permission :permission has been revoked to this role',
         'permission_allow' => 'Permission :permission has been given to this role',
@@ -71,9 +73,34 @@ return [
         'remove' => 'The :item has been correctly removed.',
     ],
 
+    'shipments' => [
+        'label_created' => 'Shipping label created',
+    ],
+
     'unauthorized' => [
         'title' => 'Unauthorized',
         'body' => 'You do not have permission to perform this action.',
+    ],
+
+    'database' => [
+        'open' => 'Open notifications',
+        'view_order' => 'View order',
+        'order_created' => [
+            'title' => 'New order received',
+            'body' => 'Order :number has just been placed.',
+        ],
+        'order_paid' => [
+            'title' => 'Order paid',
+            'body' => 'Payment for order :number has been received.',
+        ],
+        'payment_failed' => [
+            'title' => 'Payment failed',
+            'body' => 'A payment attempt for order :number has failed.',
+        ],
+        'refund_failed' => [
+            'title' => 'Refund failed',
+            'body' => 'A refund attempt for order :number has failed.',
+        ],
     ],
 
 ];

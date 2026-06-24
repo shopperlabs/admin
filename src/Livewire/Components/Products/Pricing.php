@@ -16,6 +16,7 @@ use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Model;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Mckenziearts\Icons\Untitledui\Enums\Untitledui;
@@ -29,6 +30,7 @@ class Pricing extends Component implements HasActions, HasSchemas, HasTable
     use InteractsWithSchemas;
     use InteractsWithTable;
 
+    #[Locked]
     public Model $model;
 
     public function table(Table $table): Table
@@ -53,14 +55,15 @@ class Pricing extends Component implements HasActions, HasSchemas, HasTable
             ])
             ->recordActions([
                 Action::make('edit')
+                    ->authorize('products.edit')
                     ->label(__('shopper::forms.actions.edit'))
                     ->icon(Untitledui::Edit03)
                     ->iconButton()
                     ->action(
                         fn (Price $record) => $this->dispatch(
                             'openPanel',
-                            component: 'shopper-slide-overs.manage-pricing',
-                            arguments: [
+                            'shopper-slide-overs.manage-pricing',
+                            [
                                 'modelId' => $this->model->id, // @phpstan-ignore-line
                                 'modelType' => get_class($this->model),
                                 'currencyId' => $record->currency->id,
@@ -68,19 +71,21 @@ class Pricing extends Component implements HasActions, HasSchemas, HasTable
                         )
                     ),
                 DeleteAction::make()
+                    ->authorize('products.edit')
                     ->label(__('shopper::forms.actions.delete'))
                     ->icon(Untitledui::Trash03)
                     ->iconButton(),
             ])
             ->headerActions([
                 Action::make('add')
+                    ->authorize('products.edit')
                     ->label(__('shopper::pages/products.pricing.add'))
                     ->color('gray')
                     ->action(
                         fn () => $this->dispatch(
                             'openPanel',
-                            component: 'shopper-slide-overs.manage-pricing',
-                            arguments: [
+                            'shopper-slide-overs.manage-pricing',
+                            [
                                 'modelId' => $this->model->id, // @phpstan-ignore-line
                                 'modelType' => get_class($this->model),
                             ]

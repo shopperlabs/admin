@@ -23,7 +23,6 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection;
 use Mckenziearts\Icons\Untitledui\Enums\Untitledui;
 use Shopper\Core\Models\Contracts\Brand as BrandContract;
-use Shopper\Facades\Shopper;
 use Shopper\Livewire\Pages\AbstractPageComponent;
 use Shopper\Traits\HandlesAuthorizationExceptions;
 
@@ -36,7 +35,7 @@ class Index extends AbstractPageComponent implements HasActions, HasSchemas, Has
 
     public function mount(): void
     {
-        $this->authorize('browse_brands');
+        $this->authorize('brands.browse');
     }
 
     public function table(Table $table): Table
@@ -68,6 +67,7 @@ class Index extends AbstractPageComponent implements HasActions, HasSchemas, Has
                     ->sortable(),
             ])
             ->reorderable('position')
+            ->authorizeReorder(shopper()->auth()->user()->can('brands.edit'))
             ->recordActions([
                 Action::make('edit')
                     ->label(__('shopper::forms.actions.edit'))
@@ -76,12 +76,12 @@ class Index extends AbstractPageComponent implements HasActions, HasSchemas, Has
                     ->action(
                         fn (BrandContract $record) => $this->dispatch(
                             'openPanel',
-                            component: 'shopper-slide-overs.brand-form',
-                            arguments: ['brand' => $record]
+                            'shopper-slide-overs.brand-form',
+                            ['brand' => $record]
                         )
                     )
-                    ->authorize('edit_brands')
-                    ->visible(Shopper::auth()->user()->can('edit_brands')),
+                    ->authorize('brands.edit')
+                    ->visible(shopper()->auth()->user()->can('brands.edit')),
                 Action::make('delete')
                     ->label(__('shopper::forms.actions.delete'))
                     ->icon(Untitledui::Trash03)
@@ -90,13 +90,13 @@ class Index extends AbstractPageComponent implements HasActions, HasSchemas, Has
                     ->color('danger')
                     ->requiresConfirmation()
                     ->action(fn (BrandContract $record) => $record->delete())
-                    ->authorize('delete_brands')
-                    ->visible(Shopper::auth()->user()->can('delete_brands')),
+                    ->authorize('brands.delete')
+                    ->visible(shopper()->auth()->user()->can('brands.delete')),
             ])
             ->groupedBulkActions([
                 BulkAction::make('enabled')
-                    ->authorize('edit_brands')
-                    ->visible(Shopper::auth()->user()->can('edit_brands'))
+                    ->authorize('brands.edit')
+                    ->visible(shopper()->auth()->user()->can('brands.edit'))
                     ->label(__('shopper::forms.actions.enable'))
                     ->icon(Untitledui::CheckVerified)
                     ->action(function (Collection $records): void {
@@ -113,15 +113,15 @@ class Index extends AbstractPageComponent implements HasActions, HasSchemas, Has
                     })
                     ->deselectRecordsAfterCompletion(),
                 BulkAction::make('disabled')
-                    ->authorize('edit_brands')
-                    ->visible(Shopper::auth()->user()->can('edit_brands'))
+                    ->authorize('brands.edit')
+                    ->visible(shopper()->auth()->user()->can('brands.edit'))
                     ->label(__('shopper::forms.actions.disable'))
                     ->icon(Untitledui::SlashCircle01)
                     ->action(function (Collection $records): void {
                         $records->each->updateStatus(false); // @phpstan-ignore-line
 
                         Notification::make()
-                            ->title(__('shopper::components.tables.status.updated'))
+                            ->title(__('shopper::layout.status.updated'))
                             ->body(
                                 __('shopper::notifications.disabled', [
                                     'item' => __('shopper::pages/brands.single'),
@@ -147,8 +147,8 @@ class Index extends AbstractPageComponent implements HasActions, HasSchemas, Has
                             ->success()
                             ->send();
                     })
-                    ->authorize('delete_brands')
-                    ->visible(Shopper::auth()->user()->can('delete_brands'))
+                    ->authorize('brands.delete')
+                    ->visible(shopper()->auth()->user()->can('brands.delete'))
                     ->deselectRecordsAfterCompletion(),
             ])
             ->filters([

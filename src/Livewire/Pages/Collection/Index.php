@@ -35,7 +35,7 @@ class Index extends AbstractPageComponent implements HasActions, HasSchemas, Has
 
     public function mount(): void
     {
-        $this->authorize('browse_collections');
+        $this->authorize('collections.browse');
     }
 
     public function table(Table $table): Table
@@ -93,8 +93,8 @@ class Index extends AbstractPageComponent implements HasActions, HasSchemas, Has
                         ),
                     )
                     ->extraAttributes(['wire:navigate' => true])
-                    ->authorize('edit_collections')
-                    ->visible(Shopper::auth()->user()->can('edit_collections')),
+                    ->authorize('collections.edit')
+                    ->visible(Shopper::auth()->user()->can('collections.edit')),
                 Action::make('delete')
                     ->label(__('shopper::forms.actions.delete'))
                     ->icon(Untitledui::Trash03)
@@ -103,8 +103,8 @@ class Index extends AbstractPageComponent implements HasActions, HasSchemas, Has
                     ->color('danger')
                     ->requiresConfirmation()
                     ->action(fn (CollectionContract $record) => $record->delete())
-                    ->authorize('delete_collections')
-                    ->visible(Shopper::auth()->user()->can('delete_collections')),
+                    ->authorize('collections.delete')
+                    ->visible(Shopper::auth()->user()->can('collections.delete')),
             ])
             ->groupedBulkActions([
                 DeleteBulkAction::make()
@@ -123,8 +123,8 @@ class Index extends AbstractPageComponent implements HasActions, HasSchemas, Has
                             ->success()
                             ->send();
                     })
-                    ->authorize('delete_collections')
-                    ->visible(Shopper::auth()->user()->can('delete_collections'))
+                    ->authorize('collections.delete')
+                    ->visible(Shopper::auth()->user()->can('collections.delete'))
                     ->deselectRecordsAfterCompletion(),
             ])
             ->emptyState(view('shopper::livewire.tables.empty-states.collections'));

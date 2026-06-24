@@ -32,6 +32,7 @@ return [
 
     'inventory' => [
         'removed' => 'Inventaire supprimé avec succès',
+        'updated' => 'Stock mis à jour avec succès.',
     ],
 
     'initialize' => 'Le magasin ayant été configuré avec succès, vous pouvez maintenant tout gérer',
@@ -42,6 +43,7 @@ return [
         'role_deleted' => 'Rôle supprimé avec succès',
         'role_added' => 'Un nouveau rôle a été ajouté avec succès',
         'admin_deleted' => 'Admin supprimé avec succès',
+        'user_id_copied' => 'Identifiant copié dans le presse-papiers',
         'permission_add' => 'Une nouvelle autorisation a été créée et ajoutée à ce rôle',
         'permission_revoke' => 'La permission :permission a été révoquée pour ce rôle',
         'permission_allow' => 'La permission :permission a été donnée à ce rôle',
@@ -71,9 +73,34 @@ return [
         'remove' => ':item a été correctement supprimé',
     ],
 
+    'shipments' => [
+        'label_created' => 'Étiquette d\'expédition créée',
+    ],
+
     'unauthorized' => [
         'title' => 'Non autorisé',
         'body' => 'Vous n\'avez pas la permission d\'effectuer cette action.',
+    ],
+
+    'database' => [
+        'open' => 'Ouvrir les notifications',
+        'view_order' => 'Voir la commande',
+        'order_created' => [
+            'title' => 'Nouvelle commande reçue',
+            'body' => 'La commande :number vient d\'être passée.',
+        ],
+        'order_paid' => [
+            'title' => 'Commande payée',
+            'body' => 'Le paiement de la commande :number a été reçu.',
+        ],
+        'payment_failed' => [
+            'title' => 'Échec du paiement',
+            'body' => 'Une tentative de paiement pour la commande :number a échoué.',
+        ],
+        'refund_failed' => [
+            'title' => 'Échec du remboursement',
+            'body' => 'Une tentative de remboursement pour la commande :number a échoué.',
+        ],
     ],
 
 ];

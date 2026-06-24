@@ -20,6 +20,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Mckenziearts\Icons\Untitledui\Enums\Untitledui;
 use Shopper\Cart\Models\Cart;
+use Shopper\Cart\Models\Contracts\Cart as CartContract;
 use Shopper\Livewire\Pages\AbstractPageComponent;
 use Shopper\Traits\HandlesAuthorizationExceptions;
 
@@ -32,14 +33,14 @@ class AbandonedCarts extends AbstractPageComponent implements HasActions, HasSch
 
     public function mount(): void
     {
-        $this->authorize('browse_orders');
+        $this->authorize('orders.browse');
     }
 
     public function table(Table $table): Table
     {
         return $table
             ->query(
-                Cart::query()
+                resolve(CartContract::class)::query()
                     ->whereNull('completed_at')
                     ->whereHas('lines')
                     ->where('updated_at', '<=', now()->subMinutes(
@@ -55,8 +56,8 @@ class AbandonedCarts extends AbstractPageComponent implements HasActions, HasSch
                     ->iconButton()
                     ->action(fn (Cart $record) => $this->dispatch(
                         'openPanel',
-                        component: 'shopper-slide-overs.abandoned-cart-detail',
-                        arguments: ['cart' => $record],
+                        'shopper-slide-overs.abandoned-cart-detail',
+                        ['cart' => $record],
                     )),
             ])
             ->columns([
@@ -89,7 +90,7 @@ class AbandonedCarts extends AbstractPageComponent implements HasActions, HasSch
             ->filters([
                 SelectFilter::make('customer_id')
                     ->label(__('shopper::words.customer'))
-                    ->options(fn (): array => Cart::query()
+                    ->options(fn (): array => resolve(CartContract::class)::query()
                         ->whereNull('completed_at')
                         ->whereHas('lines')
                         ->where('updated_at', '<=', now()->subMinutes(
@@ -119,9 +120,7 @@ class AbandonedCarts extends AbstractPageComponent implements HasActions, HasSch
                     ->searchable()
                     ->preload(),
             ])
-            ->emptyStateHeading(__('shopper::pages/orders.abandoned_carts.empty'))
-            ->emptyStateDescription(__('shopper::pages/orders.abandoned_carts.empty_description'))
-            ->emptyStateIcon(Untitledui::ShoppingBag02);
+            ->emptyState(view('shopper::livewire.tables.empty-states.abandoned-carts'));
     }
 
     public function render(): View

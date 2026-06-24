@@ -65,6 +65,18 @@ final class ShopperPanel
         return $this;
     }
 
+    /**
+     * @param  list<ShopperAddon>  $addons
+     */
+    public function addons(array $addons): self
+    {
+        foreach ($addons as $addon) {
+            $this->addon($addon);
+        }
+
+        return $this;
+    }
+
     public function hasAddon(string $id): bool
     {
         return $this->addonManager()->has($id);
@@ -115,6 +127,16 @@ final class ShopperPanel
     public function addonSettingItems(array $items): self
     {
         $this->addonManager()->addSettingItems($items);
+
+        return $this;
+    }
+
+    /**
+     * @param  array<class-string, bool>  $sections
+     */
+    public function addonProductSections(array $sections): self
+    {
+        $this->addonManager()->addProductSections($sections);
 
         return $this;
     }
@@ -223,7 +245,7 @@ final class ShopperPanel
     public function getRenderHook(string $hook): Htmlable
     {
         $output = collect($this->renderHooks[$hook] ?? [])
-            ->map(fn (Closure $callback): string => $callback())
+            ->map(fn (Closure $callback): string => (string) $callback())
             ->implode('');
 
         return new HtmlString($output);
@@ -288,6 +310,6 @@ final class ShopperPanel
 
     public function version(): string
     {
-        return 'v2';
+        return 'v3';
     }
 }

@@ -54,7 +54,7 @@ class CollectionRules extends SlideOverComponent implements HasActions, HasSchem
 
     public function mount(): void
     {
-        $this->authorize('edit_collections');
+        $this->authorize('collections.edit');
 
         $this->title = __('shopper::pages/collections.product_conditions');
         $this->description = __('shopper::pages/collections.automatic_description');
@@ -137,7 +137,7 @@ class CollectionRules extends SlideOverComponent implements HasActions, HasSchem
 
     public function store(): void
     {
-        $this->authorize('edit_collections');
+        $this->authorize('collections.edit');
 
         $this->collection->update($this->form->getState());
         $this->form->model($this->collection)->saveRelationships(); // @phpstan-ignore-line

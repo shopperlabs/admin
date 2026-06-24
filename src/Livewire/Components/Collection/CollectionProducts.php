@@ -73,7 +73,7 @@ class CollectionProducts extends Component implements HasActions, HasSchemas, Ha
             ])
             ->recordActions([
                 Action::make('delete')
-                    ->authorize('delete_collections')
+                    ->authorize('collections.edit')
                     ->label(__('shopper::forms.actions.delete'))
                     ->icon(Untitledui::Trash03)
                     ->iconButton()
@@ -92,7 +92,7 @@ class CollectionProducts extends Component implements HasActions, HasSchemas, Ha
             ])
             ->groupedBulkActions([
                 DeleteBulkAction::make()
-                    ->authorize('delete_collections')
+                    ->authorize('collections.edit')
                     ->label(__('shopper::forms.actions.delete'))
                     ->icon(Untitledui::Trash03)
                     ->requiresConfirmation()
@@ -116,8 +116,8 @@ class CollectionProducts extends Component implements HasActions, HasSchemas, Ha
                     ->color('gray')
                     ->action(fn () => $this->dispatch(
                         'openPanel',
-                        component: 'shopper-slide-overs.collection-rules',
-                        arguments: ['collection' => $this->collection]
+                        'shopper-slide-overs.collection-rules',
+                        ['collection' => $this->collection]
                     ))
                     ->visible($this->collection->isAutomatic()),
                 Action::make('products')
@@ -127,8 +127,8 @@ class CollectionProducts extends Component implements HasActions, HasSchemas, Ha
                     ->color('gray')
                     ->action(fn () => $this->dispatch(
                         'openPanel',
-                        component: 'shopper-slide-overs.collection-products-list',
-                        arguments: [
+                        'shopper-slide-overs.collection-products-list',
+                        [
                             'collection' => $this->collection,
                             'exceptProductIds' => $this->productsIds,
                         ]

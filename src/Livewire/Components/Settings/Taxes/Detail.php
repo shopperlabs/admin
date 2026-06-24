@@ -12,6 +12,7 @@ use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Isolate;
 use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Reactive;
 use Livewire\Component;
@@ -22,6 +23,7 @@ use Shopper\Traits\HandlesAuthorizationExceptions;
 /**
  * @property-read ?TaxZone $taxZone
  */
+#[Isolate]
 #[Lazy]
 class Detail extends Component implements HasActions, HasSchemas
 {
@@ -42,7 +44,7 @@ class Detail extends Component implements HasActions, HasSchemas
     public function deleteAction(): Action
     {
         return DeleteAction::make('delete')
-            ->authorize('access_setting')
+            ->authorize('system.settings')
             ->record($this->taxZone)
             ->icon(Untitledui::Trash03)
             ->iconButton()
@@ -50,7 +52,7 @@ class Detail extends Component implements HasActions, HasSchemas
             ->after(function (): void {
                 unset($this->taxZone);
 
-                $this->redirectRoute('shopper.settings.taxes');
+                $this->dispatch('tax-zone-deleted');
             });
     }
 
@@ -61,8 +63,8 @@ class Detail extends Component implements HasActions, HasSchemas
             ->icon(Untitledui::Edit03)
             ->action(fn (array $arguments) => $this->dispatch(
                 'openPanel',
-                component: 'shopper-slide-overs.tax-zone-form',
-                arguments: ['taxZoneId' => $arguments['id']]
+                'shopper-slide-overs.tax-zone-form',
+                ['taxZoneId' => $arguments['id']]
             ));
     }
 

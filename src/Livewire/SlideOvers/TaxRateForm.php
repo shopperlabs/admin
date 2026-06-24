@@ -53,7 +53,7 @@ class TaxRateForm extends SlideOverComponent implements HasActions, HasSchemas, 
 
     public function mount(int $taxZoneId, ?int $taxRateId = null): void
     {
-        $this->authorize('access_setting');
+        $this->authorize('system.settings');
 
         $this->taxZoneId = $taxZoneId;
 
@@ -104,7 +104,7 @@ class TaxRateForm extends SlideOverComponent implements HasActions, HasSchemas, 
 
     public function store(): void
     {
-        $this->authorize('access_setting');
+        $this->authorize('system.settings');
 
         $data = $this->form->getState();
         $data['tax_zone_id'] = $this->taxZoneId;
@@ -120,6 +120,6 @@ class TaxRateForm extends SlideOverComponent implements HasActions, HasSchemas, 
             ->success()
             ->send();
 
-        $this->redirectRoute('shopper.settings.taxes', ['zone' => $this->taxZoneId]);
+        $this->redirectRoute('shopper.settings.taxes', ['zone' => $this->taxZoneId], navigate: true);
     }
 }

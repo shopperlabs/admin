@@ -51,7 +51,7 @@ class AddCollectionForm extends SlideOverComponent implements HasActions, HasSch
 
     public function mount(): void
     {
-        $this->authorize('add_collections');
+        $this->authorize('collections.create');
 
         $this->title = __('shopper::forms.actions.add_label', ['label' => __('shopper::pages/collections.single')]);
 

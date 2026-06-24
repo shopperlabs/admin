@@ -35,7 +35,7 @@ class Index extends AbstractPageComponent implements HasActions, HasSchemas, Has
 
     public function mount(): void
     {
-        $this->authorize('browse_suppliers');
+        $this->authorize('suppliers.browse');
     }
 
     public function table(Table $table): Table
@@ -72,12 +72,12 @@ class Index extends AbstractPageComponent implements HasActions, HasSchemas, Has
                     ->action(
                         fn (SupplierContract $record) => $this->dispatch(
                             'openPanel',
-                            component: 'shopper-slide-overs.supplier-form',
-                            arguments: ['supplier' => $record]
+                            'shopper-slide-overs.supplier-form',
+                            ['supplier' => $record]
                         )
                     )
-                    ->authorize('edit_suppliers')
-                    ->visible(Shopper::auth()->user()->can('edit_suppliers')),
+                    ->authorize('suppliers.edit')
+                    ->visible(Shopper::auth()->user()->can('suppliers.edit')),
                 Action::make('delete')
                     ->label(__('shopper::forms.actions.delete'))
                     ->icon(Untitledui::Trash03)
@@ -86,13 +86,13 @@ class Index extends AbstractPageComponent implements HasActions, HasSchemas, Has
                     ->color('danger')
                     ->requiresConfirmation()
                     ->action(fn (SupplierContract $record) => $record->delete())
-                    ->authorize('delete_suppliers')
-                    ->visible(Shopper::auth()->user()->can('delete_suppliers')),
+                    ->authorize('suppliers.delete')
+                    ->visible(Shopper::auth()->user()->can('suppliers.delete')),
             ])
             ->groupedBulkActions([
                 BulkAction::make('enabled')
-                    ->authorize('edit_suppliers')
-                    ->visible(Shopper::auth()->user()->can('edit_suppliers'))
+                    ->authorize('suppliers.edit')
+                    ->visible(Shopper::auth()->user()->can('suppliers.edit'))
                     ->label(__('shopper::forms.actions.enable'))
                     ->icon(Untitledui::CheckVerified)
                     ->action(function (Collection $records): void {
@@ -109,15 +109,15 @@ class Index extends AbstractPageComponent implements HasActions, HasSchemas, Has
                     })
                     ->deselectRecordsAfterCompletion(),
                 BulkAction::make('disabled')
-                    ->authorize('edit_suppliers')
-                    ->visible(Shopper::auth()->user()->can('edit_suppliers'))
+                    ->authorize('suppliers.edit')
+                    ->visible(Shopper::auth()->user()->can('suppliers.edit'))
                     ->label(__('shopper::forms.actions.disable'))
                     ->icon(Untitledui::SlashCircle01)
                     ->action(function (Collection $records): void {
                         $records->each->updateStatus(false); // @phpstan-ignore-line
 
                         Notification::make()
-                            ->title(__('shopper::components.tables.status.updated'))
+                            ->title(__('shopper::layout.status.updated'))
                             ->body(
                                 __('shopper::notifications.disabled', [
                                     'item' => __('shopper::pages/suppliers.single'),
@@ -143,8 +143,8 @@ class Index extends AbstractPageComponent implements HasActions, HasSchemas, Has
                             ->success()
                             ->send();
                     })
-                    ->authorize('delete_suppliers')
-                    ->visible(Shopper::auth()->user()->can('delete_suppliers'))
+                    ->authorize('suppliers.delete')
+                    ->visible(Shopper::auth()->user()->can('suppliers.delete'))
                     ->deselectRecordsAfterCompletion(),
             ])
             ->filters([

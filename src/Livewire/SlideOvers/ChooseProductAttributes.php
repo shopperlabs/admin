@@ -58,7 +58,7 @@ class ChooseProductAttributes extends SlideOverComponent implements HasActions, 
 
     public function mount(): void
     {
-        $this->authorize('edit_products');
+        $this->authorize('products.edit');
 
         $this->form->fill();
     }
@@ -193,7 +193,7 @@ class ChooseProductAttributes extends SlideOverComponent implements HasActions, 
 
     public function store(): void
     {
-        $this->authorize('edit_products');
+        $this->authorize('products.edit');
 
         $values = data_get($this->form->getState(), 'values');
 

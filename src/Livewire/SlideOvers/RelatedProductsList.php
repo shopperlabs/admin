@@ -49,7 +49,7 @@ class RelatedProductsList extends SlideOverComponent implements HasActions, HasS
      */
     public function mount(?Product $product = null, array $ids = []): void
     {
-        $this->authorize('edit_products');
+        $this->authorize('products.edit');
 
         $this->product = $product;
         $this->exceptProductIds = $ids;
@@ -90,6 +90,7 @@ class RelatedProductsList extends SlideOverComponent implements HasActions, HasS
             ->selectable()
             ->toolbarActions([
                 BulkAction::make('add')
+                    ->authorize('products.edit')
                     ->label(__('shopper::pages/collections.modal.action'))
                     ->icon(Untitledui::Plus)
                     ->action(function (Collection $records): void {

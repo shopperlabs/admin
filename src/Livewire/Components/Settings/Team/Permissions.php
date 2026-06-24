@@ -22,12 +22,12 @@ class Permissions extends Component
 
     public function mount(): void
     {
-        $this->authorize('view_users');
+        $this->authorize('system.users');
     }
 
     public function togglePermission(int $id): void
     {
-        $this->authorize('access_setting');
+        $this->authorize('system.settings');
 
         $permission = Permission::query()->find($id);
 
@@ -54,7 +54,7 @@ class Permissions extends Component
 
     public function removePermission(int $id): void
     {
-        $this->authorize('access_setting');
+        $this->authorize('system.settings');
 
         $permission = Permission::query()->find($id);
 
