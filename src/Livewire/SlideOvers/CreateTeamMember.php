@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Laravelcm\LivewireSlideOvers\SlideOverComponent;
 use Shopper\Components\Form\GenderField;
+use Shopper\Components\Form\PhoneInput;
 use Shopper\Components\Section;
 use Shopper\Contracts\SlideOverForm;
 use Shopper\Models\Contracts\ShopperUser;
@@ -50,7 +51,7 @@ class CreateTeamMember extends SlideOverComponent implements HasActions, HasSche
 
     public function mount(): void
     {
-        $this->authorize('system.settings');
+        $this->authorize('system.users');
 
         $this->title = __('shopper::pages/settings/staff.add_admin');
 
@@ -95,9 +96,7 @@ class CreateTeamMember extends SlideOverComponent implements HasActions, HasSche
                             ->label(__('shopper::forms.label.last_name'))
                             ->required(),
                         GenderField::make(),
-                        TextInput::make('phone_number')
-                            ->label(__('shopper::forms.label.phone_number'))
-                            ->tel(),
+                        PhoneInput::make('phone_number'),
                     ]),
                 Section::make(__('shopper::pages/settings/staff.role_information'))
                     ->description(__('shopper::pages/settings/staff.role_information_summary'))
@@ -121,7 +120,7 @@ class CreateTeamMember extends SlideOverComponent implements HasActions, HasSche
 
     public function store(): void
     {
-        $this->authorize('system.settings');
+        $this->authorize('system.users');
 
         $data = $this->form->getState();
         $userModel = config('auth.providers.users.model');

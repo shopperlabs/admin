@@ -14,7 +14,9 @@ use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Arr;
 use Livewire\Component;
+use Shopper\Components\Form\PhoneInput;
 use Shopper\Components\Section;
 use Shopper\Traits\HandlesAuthorizationExceptions;
 use Shopper\Traits\HasAuthenticated;
@@ -34,7 +36,13 @@ class Profile extends Component implements HasActions, HasSchemas
 
     public function mount(): void
     {
-        $this->form->fill($this->getUser()->toArray());
+        $this->form->fill(Arr::only($this->getUser()->toArray(), [
+            'avatar_location',
+            'first_name',
+            'last_name',
+            'email',
+            'phone_number',
+        ]));
     }
 
     public function form(Schema $schema): Schema
@@ -51,6 +59,7 @@ class Profile extends Component implements HasActions, HasSchemas
                             ->label(__('shopper::forms.label.photo'))
                             ->avatar()
                             ->image()
+                            ->acceptedFileTypes(config('shopper.media.accepts_mime_types'))
                             ->maxSize(1024)
                             ->disk(config('shopper.media.storage.disk_name')),
                         Grid::make()
@@ -71,9 +80,7 @@ class Profile extends Component implements HasActions, HasSchemas
                                         table: config('auth.providers.users.model'),
                                         ignorable: $this->getUser()
                                     ),
-                                TextInput::make('phone_number')
-                                    ->label(__('shopper::forms.label.phone_number'))
-                                    ->tel(),
+                                PhoneInput::make('phone_number'),
                             ]),
                     ]),
             ])

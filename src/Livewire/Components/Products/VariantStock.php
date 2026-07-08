@@ -8,7 +8,6 @@ use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
@@ -19,8 +18,8 @@ use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Mckenziearts\Icons\Untitledui\Enums\Untitledui;
+use Shopper\Components\Form\NumberStepper;
 use Shopper\Core\Models\Inventory;
-use Shopper\Core\Models\InventoryHistory;
 use Shopper\Traits\HandlesAuthorizationExceptions;
 
 /**
@@ -50,38 +49,31 @@ class VariantStock extends Component implements HasActions, HasSchemas
                     ->options(Inventory::query()->pluck('name', 'id'))
                     ->native(false)
                     ->required(),
-                TextInput::make('quantity')
+                NumberStepper::make('quantity')
                     ->label(__('shopper::forms.label.quantity'))
                     ->placeholder('-10 or -5 or 50, etc')
-                    ->numeric()
                     ->required(),
             ])
             ->action(function (array $data): void {
                 $inventoryId = (int) $data['inventory'];
                 $quantity = (int) $data['quantity'];
+                $currentStock = $this->variant->stockInventory($inventoryId);
 
-                $currentStock = InventoryHistory::query()
-                    ->where('inventory_id', $inventoryId)
-                    ->where('stockable_id', $this->variant->id)
-                    ->where('stockable_type', config('shopper.models.variant'))
-                    ->get()
-                    ->sum('quantity');
-
-                $realTimeStock = $currentStock + $quantity;
-
-                if ($realTimeStock >= $currentStock) {
+                if ($quantity >= 0) {
                     $this->variant->mutateStock(
                         inventoryId: $inventoryId,
                         quantity: $quantity,
-                        oldQuantity: $quantity,
+                        oldQuantity: $currentStock,
                         event: __('shopper::pages/products.inventory.add'),
+                        userId: auth()->id(),
                     );
                 } else {
                     $this->variant->decreaseStock(
                         inventoryId: $inventoryId,
                         quantity: $quantity,
-                        oldQuantity: $quantity,
+                        oldQuantity: $currentStock,
                         event: __('shopper::pages/products.inventory.remove'),
+                        userId: auth()->id(),
                     );
                 }
 

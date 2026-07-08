@@ -11,6 +11,9 @@ use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\ImageEntry;
 use Filament\Notifications\Livewire\DatabaseNotifications;
+use Filament\Schemas\Components\Component;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\View as SchemaView;
 use Filament\Support\Colors\Color;
 use Filament\Support\Facades\FilamentColor;
 use Filament\Support\Facades\FilamentView;
@@ -21,12 +24,15 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Laravel\Passkeys\Passkeys;
 use Livewire\Livewire;
 use PragmaRX\Google2FA\Google2FA;
 use Shopper\Concerns\TwoFactorAuthenticationProvider;
 use Shopper\Contracts\LoginResponse as LoginResponseContract;
 use Shopper\Contracts\TwoFactorAuthenticationProvider as TwoFactorAuthenticationProviderContract;
+use Shopper\Core\Enum\DiscountEligibility;
 use Shopper\Core\Traits\HasRegisterConfigAndMigrationFiles;
+use Shopper\Discounts\DiscountEligibilityFieldRegistry;
 use Shopper\Facades\Shopper;
 use Shopper\Http\Middleware\Authenticate;
 use Shopper\Http\Middleware\DispatchShopper;
@@ -99,6 +105,12 @@ final class ShopperServiceProvider extends PackageServiceProvider
 
     public function packageRegistered(): void
     {
+        $this->app->booting(function (): void {
+            if (config('shopper.auth.passkeys_enabled')) {
+                Passkeys::ignoreRoutes();
+            }
+        });
+
         $this->app['config']->set('livewire-slide-over.include_js', false);
         $this->app['config']->set('sidebar.breadcrumbs.view', 'shopper::components.breadcrumbs');
 
@@ -133,7 +145,32 @@ final class ShopperServiceProvider extends PackageServiceProvider
             config('shopper.themes.registered', [])
         ));
 
+        $this->registerDiscountEligibilityFields();
+
         $this->loadViewsFrom($this->root.'/resources/views', 'shopper');
+    }
+
+    protected function registerDiscountEligibilityFields(): void
+    {
+        $this->app->singleton(DiscountEligibilityFieldRegistry::class, function (): DiscountEligibilityFieldRegistry {
+            $registry = new DiscountEligibilityFieldRegistry;
+
+            $registry->register(
+                DiscountEligibility::Customers->value,
+                'customers',
+                fn (): Component => SchemaView::make('shopper::livewire.pages.discounts.partials.items-list')
+                    ->viewData(['type' => 'customers'])
+                    ->visible(fn (Get $get): bool => $get('eligibility') === DiscountEligibility::Customers->value),
+                fn (array $ids): array => resolve(config('auth.providers.users.model'))->newQuery()
+                    ->scopes('customers')
+                    ->whereIn('id', $ids)
+                    ->pluck('id')
+                    ->map(fn ($id): int => (int) $id)
+                    ->all(),
+            );
+
+            return $registry;
+        });
     }
 
     protected function registerErrorPages(): void

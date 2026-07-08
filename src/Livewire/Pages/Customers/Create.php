@@ -17,18 +17,17 @@ use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Mckenziearts\Icons\Untitledui\Enums\Untitledui;
 use Shopper\Components\Form\AddressField;
 use Shopper\Components\Form\GenderField;
+use Shopper\Components\Form\PhoneInput;
 use Shopper\Components\Section;
 use Shopper\Components\Separator;
 use Shopper\Core\Enum\AddressType;
-use Shopper\Core\Models\Country;
+use Shopper\Core\Events\Customers\CustomerRegistered;
 use Shopper\Livewire\Pages\AbstractPageComponent;
 use Shopper\Models\Contracts\ShopperUser;
 use Shopper\Notifications\CustomerSendCredentials;
@@ -87,10 +86,8 @@ class Create extends AbstractPageComponent implements HasActions, HasSchemas
                             ->email()
                             ->unique()
                             ->required(),
-                        TextInput::make('phone_number')
-                            ->label(__('shopper::forms.label.phone_number'))
-                            ->hint(__('shopper::forms.label.optional'))
-                            ->tel(),
+                        PhoneInput::make('phone_number')
+                            ->hint(__('shopper::forms.label.optional')),
                         GenderField::make(),
                     ]),
                 Separator::make(),
@@ -184,6 +181,8 @@ class Create extends AbstractPageComponent implements HasActions, HasSchemas
         $customer->assignRole(config('shopper.admin.roles.user'));
         $customer->addresses()->create($address);
 
+        event(new CustomerRegistered($customer));
+
         if ($sendMail) {
             $customer->notify(new CustomerSendCredentials($password));
         }
@@ -198,12 +197,7 @@ class Create extends AbstractPageComponent implements HasActions, HasSchemas
 
     public function render(): View
     {
-        return view('shopper::livewire.pages.customers.create', [
-            'countries' => Cache::get(
-                key: 'countries-settings',
-                default: fn (): Collection => Country::query()->orderBy('name')->get()
-            ),
-        ])
+        return view('shopper::livewire.pages.customers.create')
             ->title(__('shopper::forms.actions.add_label', ['label' => __('shopper::pages/customers.single')]));
     }
 

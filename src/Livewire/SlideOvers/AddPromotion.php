@@ -31,6 +31,8 @@ use Laravelcm\LivewireSlideOvers\SlideOverComponent;
 use Livewire\Attributes\Locked;
 use Mckenziearts\Icons\Untitledui\Enums\Untitledui;
 use Shopper\Actions\Store\SaveAndDispatchDiscountAction;
+use Shopper\Cart\Discounts\DiscountEligibilityManager;
+use Shopper\Components\Form\MoneyInput;
 use Shopper\Components\Section;
 use Shopper\Components\SlideOverWizard;
 use Shopper\Components\Wizard\StepColumn;
@@ -44,6 +46,7 @@ use Shopper\Core\Models\Campaign;
 use Shopper\Core\Models\Contracts\Product;
 use Shopper\Core\Models\Discount;
 use Shopper\Core\Models\Zone;
+use Shopper\Discounts\DiscountEligibilityFieldRegistry;
 use Shopper\Livewire\Concerns\InteractsWithDiscountItems;
 use Shopper\Traits\HandlesAuthorizationExceptions;
 
@@ -111,7 +114,7 @@ class AddPromotion extends SlideOverComponent implements HasActions, HasSchemas
                                 ->columnSpanFull()
                                 ->required()
                                 ->live(),
-                            TextInput::make('value')
+                            MoneyInput::make('value')
                                 ->label(fn (Get $get): ?string => match ($get('type')) {
                                     DiscountType::Percentage->value => __('shopper::pages/discounts.percentage'),
                                     DiscountType::FixedAmount->value => __('shopper::pages/discounts.fixed_amount'),
@@ -122,16 +125,8 @@ class AddPromotion extends SlideOverComponent implements HasActions, HasSchemas
                                     DiscountType::FixedAmount->value => $this->resolveZoneCurrency($get('zone_id')),
                                     default => null,
                                 })
-                                ->dehydrateStateUsing(function (Get $get, $state) {
-                                    if ($get('type') !== DiscountType::FixedAmount->value) {
-                                        return (int) $state;
-                                    }
-
-                                    $currency = $this->resolveZoneCurrency($get('zone_id'));
-
-                                    return is_no_division_currency($currency) ? (int) $state : (int) round((float) $state * 100);
-                                })
-                                ->numeric()
+                                ->money(fn (Get $get): bool => $get('type') === DiscountType::FixedAmount->value)
+                                ->currency(fn (Get $get): string => $this->resolveZoneCurrency($get('zone_id')))
                                 ->minValue(fn (Get $get): float => $get('type') === DiscountType::FixedAmount->value ? 0.01 : 1)
                                 ->maxValue(fn (Get $get): int => $get('type') === DiscountType::Percentage->value ? 100 : 999_999_999)
                                 ->required()
@@ -194,18 +189,13 @@ class AddPromotion extends SlideOverComponent implements HasActions, HasSchemas
                                 ->visible(fn (Get $get): bool => $get('apply_to') === DiscountApplyTo::Products->value),
                             Radio::make('eligibility')
                                 ->label(__('shopper::pages/discounts.customer_eligibility'))
-                                ->options(DiscountEligibility::options())
-                                ->descriptions([
-                                    DiscountEligibility::Everyone->value => __('shopper::pages/discounts.eligibility_everyone_description'),
-                                    DiscountEligibility::Customers->value => __('shopper::pages/discounts.eligibility_customers_description'),
-                                ])
+                                ->options(resolve(DiscountEligibilityManager::class)->options())
+                                ->descriptions(resolve(DiscountEligibilityManager::class)->descriptions())
                                 ->columns(2)
                                 ->columnSpanFull()
                                 ->required()
                                 ->live(),
-                            SchemaView::make('shopper::livewire.pages.discounts.partials.items-list')
-                                ->viewData(['type' => 'customers'])
-                                ->visible(fn (Get $get): bool => $get('eligibility') === DiscountEligibility::Customers->value),
+                            ...resolve(DiscountEligibilityFieldRegistry::class)->fields(),
                             Radio::make('min_required')
                                 ->label(__('shopper::pages/discounts.min_requirement'))
                                 ->inline()
@@ -213,23 +203,15 @@ class AddPromotion extends SlideOverComponent implements HasActions, HasSchemas
                                 ->options(DiscountRequirement::options())
                                 ->required()
                                 ->live(),
-                            TextInput::make('min_required_value')
+                            MoneyInput::make('min_required_value')
                                 ->hiddenLabel()
-                                ->numeric()
                                 ->minValue(1)
                                 ->suffix(fn (Get $get): ?string => match ($get('min_required')) {
                                     DiscountRequirement::Price->value => $this->resolveZoneCurrency($get('zone_id')),
                                     default => null,
                                 })
-                                ->dehydrateStateUsing(function (Get $get, $state) {
-                                    if ($get('min_required') !== DiscountRequirement::Price->value) {
-                                        return $state;
-                                    }
-
-                                    $currency = $this->resolveZoneCurrency($get('zone_id'));
-
-                                    return is_no_division_currency($currency) ? (string) (int) $state : (string) ((int) round((float) $state * 100));
-                                })
+                                ->money(fn (Get $get): bool => $get('min_required') === DiscountRequirement::Price->value)
+                                ->currency(fn (Get $get): string => $this->resolveZoneCurrency($get('zone_id')))
                                 ->required(fn (Get $get): bool => $get('min_required') !== DiscountRequirement::None->value)
                                 ->visible(fn (Get $get): bool => filled($get('min_required')) && $get('min_required') !== DiscountRequirement::None->value),
                             Grid::make()
@@ -322,9 +304,10 @@ class AddPromotion extends SlideOverComponent implements HasActions, HasSchemas
         $data = $this->form->getState();
 
         $applyTo = $data['apply_to'] ?? null;
-        $eligibility = $data['eligibility'] ?? null;
+        $eligibility = (string) ($data['eligibility'] ?? '');
 
-        $userModel = config('auth.providers.users.model');
+        $registry = resolve(DiscountEligibilityFieldRegistry::class);
+        $formKey = $registry->formKeyFor($eligibility);
 
         $products = resolve(Product::class)::query()
             ->scopes('publish')
@@ -333,12 +316,9 @@ class AddPromotion extends SlideOverComponent implements HasActions, HasSchemas
             ->map(fn ($id): int => (int) $id)
             ->all();
 
-        $customers = $userModel::query()
-            ->scopes('customers')
-            ->whereIn('id', array_map('intval', (array) data_get($this->data, 'customers', [])))
-            ->pluck('id')
-            ->map(fn ($id): int => (int) $id)
-            ->all();
+        $eligibilityIds = $formKey !== null
+            ? $registry->resolveIds($eligibility, array_map('intval', (array) data_get($this->data, $formKey, [])))
+            : [];
 
         if ($applyTo === DiscountApplyTo::Products->value && $products === []) {
             Notification::make()
@@ -349,9 +329,9 @@ class AddPromotion extends SlideOverComponent implements HasActions, HasSchemas
             return;
         }
 
-        if ($eligibility === DiscountEligibility::Customers->value && $customers === []) {
+        if ($formKey !== null && $eligibilityIds === []) {
             Notification::make()
-                ->title(__('shopper::pages/discounts.customers_picker.required'))
+                ->title(__('shopper::pages/discounts.eligibility_picker.required'))
                 ->danger()
                 ->send();
 
@@ -359,9 +339,9 @@ class AddPromotion extends SlideOverComponent implements HasActions, HasSchemas
         }
 
         $discount = app()->call(SaveAndDispatchDiscountAction::class, [
-            'values' => Arr::except($data, ['products', 'customers', 'usage_number']),
+            'values' => Arr::except($data, array_merge(['products', 'usage_number'], $registry->formKeys())),
             'productsIds' => $products,
-            'customersIds' => $customers,
+            'eligibilityIds' => $eligibilityIds,
             'trigger' => $data['trigger'] ?? null,
             'campaignId' => isset($data['campaign_id']) ? (int) $data['campaign_id'] : null,
         ]);

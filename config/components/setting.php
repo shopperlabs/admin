@@ -21,6 +21,7 @@ return [
         'location-create' => Pages\Settings\Locations\Create::class,
         'location-edit' => Pages\Settings\Locations\Edit::class,
         'legal' => Pages\Settings\LegalPage::class,
+        'channels' => Pages\Settings\Channels::class,
         'payment-methods' => Pages\Settings\PaymentMethods::class,
         'carriers' => Pages\Settings\Carriers::class,
         'team-index' => Pages\Settings\Team\Index::class,
@@ -28,6 +29,7 @@ return [
         'zones' => Pages\Settings\Zones::class,
         'taxes' => Pages\Settings\Taxes::class,
         'currencies' => Pages\Settings\Currencies::class,
+        'webhooks' => Pages\Settings\Webhooks::class,
     ],
 
     /*
