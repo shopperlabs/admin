@@ -15,15 +15,17 @@ use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Support\Enums\Size;
 use Filament\Support\Enums\Width;
 use Illuminate\Contracts\View\View;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\Rules\Unique;
 use Livewire\Attributes\Layout;
+use Shopper\Actions\Store\Product\UseImageAsThumbnail;
+use Shopper\Components\Form\ImagePicker;
 use Shopper\Core\Models\Contracts\Product;
 use Shopper\Core\Models\Contracts\ProductVariant;
 use Shopper\Livewire\Pages\AbstractPageComponent;
 use Shopper\Sidebar\Breadcrumbs\Breadcrumb;
 use Shopper\Sidebar\Traits\WithBreadcrumbs;
 use Shopper\Traits\HandlesAuthorizationExceptions;
+use Spatie\MediaLibrary\MediaCollections\Models\Media as SpatieMedia;
 
 #[Layout('shopper::components.layouts.product')]
 class Variant extends AbstractPageComponent implements HasActions, HasSchemas
@@ -39,22 +41,9 @@ class Variant extends AbstractPageComponent implements HasActions, HasSchemas
 
     public function getBreadcrumbs(): array
     {
-        $crumbs = [];
-
-        if ($this->product !== null) {
-            $crumbs[] = new Breadcrumb(
-                text: $this->product->name,
-                url: Route::has('shopper.products.edit')
-                    ? route('shopper.products.edit', $this->product)
-                    : null,
-            );
-        }
-
-        if ($this->variant !== null) {
-            $crumbs[] = new Breadcrumb(text: $this->variant->name);
-        }
-
-        return $crumbs;
+        return $this->variant !== null
+            ? [new Breadcrumb(text: $this->variant->name)]
+            : [];
     }
 
     public function mount(): void
@@ -107,6 +96,43 @@ class Variant extends AbstractPageComponent implements HasActions, HasSchemas
             });
     }
 
+    public function useAsThumbnailAction(): Action
+    {
+        return Action::make('useAsThumbnail')
+            ->authorize('products.variants.edit')
+            ->label(__('shopper::pages/products.choose_from_images'))
+            ->color('gray')
+            ->size(Size::Small)
+            ->visible(fn (): bool => $this->variant->getMedia((string) config('shopper.media.storage.collection_name'))->isNotEmpty())
+            ->modalHeading(__('shopper::pages/products.use_as_thumbnail'))
+            ->modalDescription(__('shopper::pages/products.use_as_thumbnail_description'))
+            ->modalWidth(Width::Medium)
+            ->modalSubmitActionLabel(__('shopper::pages/products.use_as_thumbnail'))
+            ->schema([
+                ImagePicker::make('media_id')
+                    ->hiddenLabel()
+                    ->required()
+                    ->options(
+                        fn (): array => $this->variant->getMedia((string) config('shopper.media.storage.collection_name'))
+                            ->mapWithKeys(fn (SpatieMedia $media): array => [$media->id => $media->getUrl()])
+                            ->all()
+                    ),
+            ])
+            ->action(function (array $data): void {
+                app()->call(UseImageAsThumbnail::class, [
+                    'model' => $this->variant,
+                    'mediaId' => $data['media_id'],
+                ]);
+
+                $this->variant->refresh();
+
+                Notification::make()
+                    ->title(__('shopper::pages/products.notifications.variation_update'))
+                    ->success()
+                    ->send();
+            });
+    }
+
     public function mediaAction(): Action
     {
         return Action::make('media')
@@ -137,6 +163,6 @@ class Variant extends AbstractPageComponent implements HasActions, HasSchemas
     public function render(): View
     {
         return view('shopper::livewire.pages.products.variant')
-            ->title(__('shopper::pages/products.variants.variant_title', ['name' => $this->variant->name]));
+            ->title($this->product->name.' ~ '.$this->variant->name);
     }
 }

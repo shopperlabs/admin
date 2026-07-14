@@ -10,9 +10,10 @@ use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
+use Filament\Support\Enums\Alignment;
 use Filament\Support\Enums\Width;
 use Filament\Tables\Columns\IconColumn;
-use Filament\Tables\Columns\SpatieMediaLibraryImageColumn;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ViewColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
@@ -20,6 +21,8 @@ use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Filters\QueryBuilder;
 use Filament\Tables\Filters\QueryBuilder\Constraints\BooleanConstraint;
 use Filament\Tables\Filters\QueryBuilder\Constraints\DateConstraint;
+use Filament\Tables\Filters\QueryBuilder\Constraints\RelationshipConstraint;
+use Filament\Tables\Filters\QueryBuilder\Constraints\RelationshipConstraint\Operators\IsRelatedToOperator;
 use Filament\Tables\Filters\QueryBuilder\Constraints\SelectConstraint;
 use Filament\Tables\Filters\QueryBuilder\Constraints\TextConstraint;
 use Filament\Tables\Table;
@@ -28,9 +31,14 @@ use Illuminate\Contracts\Pagination\Paginator;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
+use JaOcero\RadioDeck\Forms\Components\RadioDeck;
+use Livewire\Attributes\On;
+use Livewire\Component;
 use Mckenziearts\Icons\Untitledui\Enums\Untitledui;
 use Shopper\Core\Enum\ProductType;
 use Shopper\Core\Events\Products\ProductDeleted;
+use Shopper\Core\Import\Contracts\ImportSource;
+use Shopper\Core\Import\ImportManager;
 use Shopper\Core\Models\Contracts\Product;
 use Shopper\Core\Models\Contracts\ProductVariant;
 use Shopper\Feature;
@@ -88,19 +96,49 @@ class Index extends AbstractPageComponent implements HasActions, HasSchemas, Has
         $this->authorize('products.browse');
     }
 
+    #[On('products.import.finished')]
+    public function refreshAfterImport(): void {}
+
+    public function importAction(): Action
+    {
+        $sources = resolve(ImportManager::class)->configuredSources();
+
+        return Action::make('import')
+            ->label(__('shopper::pages/products.import.action'))
+            ->color('gray')
+            ->authorize('products.create')
+            ->modalHeading(__('shopper::pages/products.import.title'))
+            ->modalDescription(__('shopper::pages/products.import.description'))
+            ->modalWidth(Width::ExtraLarge)
+            ->modalSubmitActionLabel(__('shopper::pages/products.import.next'))
+            ->schema([
+                RadioDeck::make('source')
+                    ->hiddenLabel()
+                    ->required()
+                    ->options($sources->map(fn (ImportSource $source): string => $source->name())->all())
+                    ->descriptions($sources->map(fn (ImportSource $source): string => $source->description())->all())
+                    ->icons($sources->map(fn (ImportSource $source): string => $source->icon())->all())
+                    ->alignment(Alignment::Start)
+                    ->columns(1),
+            ])
+            ->action(function (array $data, Component $livewire): void {
+                $livewire->dispatch('openPanel', 'shopper-slide-overs.import-'.$data['source']);
+            });
+    }
+
     public function table(Table $table): Table
     {
         return $table
             ->query(
                 resolve(Product::class)::query()
-                    ->with(['brand', 'variants'])
+                    ->with(['brand', 'media', 'variants'])
                     ->withCount(['variants'])
                     ->latest()
             )
             ->columns([
-                SpatieMediaLibraryImageColumn::make('thumbnail')
-                    ->collection(config('shopper.media.storage.thumbnail_collection'))
+                ImageColumn::make('thumbnail')
                     ->label(__('shopper::forms.label.thumbnail'))
+                    ->getStateUsing(fn (Product $record): string => $record->getThumbnailUrl())
                     ->circular(),
                 TextColumn::make('name')
                     ->label(__('shopper::forms.label.name'))
@@ -173,6 +211,16 @@ class Index extends AbstractPageComponent implements HasActions, HasSchemas, Has
                             ->multiple(),
                         BooleanConstraint::make('is_visible')
                             ->label(__('shopper::forms.label.availability')),
+                        RelationshipConstraint::make('channels')
+                            ->label(__('shopper::pages/settings/menu.sales'))
+                            ->icon(Untitledui::Share07)
+                            ->selectable(
+                                IsRelatedToOperator::make()
+                                    ->titleAttribute('name')
+                                    ->searchable()
+                                    ->multiple()
+                                    ->preload(),
+                            ),
                         DateConstraint::make('published_at'),
                     ])
                     ->constraintPickerColumns(),

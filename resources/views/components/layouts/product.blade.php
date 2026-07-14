@@ -6,12 +6,19 @@
     $product = request()->route('product');
     $groups = resolve(\Shopper\Navigation\Product\ProductSectionManager::class)->groupedForProduct($product);
 
+    resolve(\Shopper\Sidebar\Breadcrumbs\Breadcrumbs::class)->prepend(
+        new \Shopper\Sidebar\Breadcrumbs\Breadcrumb(
+            text: $product->name,
+            url: route('shopper.products.edit', $product),
+        )
+    );
+
     $editPath = trim(parse_url(route('shopper.products.edit', ['product' => $product]), PHP_URL_PATH) ?? '', '/');
     $currentRest = ltrim(\Illuminate\Support\Str::after(trim(request()->path(), '/'), $editPath), '/');
     $currentSegment = $currentRest === '' ? '' : \Illuminate\Support\Str::before($currentRest, '/');
 @endphp
 
-<x-shopper::layouts.app :title="$title">
+<x-shopper::layouts.app :$title>
     <div class="sticky top-0 z-10 bg-sh-surface border-b border-sh-border py-8">
         <x-shopper::container>
             <x-shopper::heading>
@@ -58,12 +65,21 @@
                             x-on:click="collapsed = ! collapsed"
                             class="text-sh-fg-muted hover:bg-sh-sidebar-hover hover:text-sh-fg inline-flex size-8 items-center justify-center rounded-lg transition"
                             :aria-label="collapsed ? @js(__('shopper::words.expand')) : @js(__('shopper::words.collapse'))"
+                            x-tooltip="{
+                                content: () => collapsed ? @js(__('shopper::words.expand')) : @js(__('shopper::words.collapse')),
+                                placement: 'right',
+                                theme: $store.theme,
+                            }"
                         >
-                            <x-filament::icon
-                                icon="untitledui-chevron-left-double"
-                                class="size-4 transition-transform"
-                                ::class="collapsed && 'rotate-180'"
-                            />
+                            <span
+                                class="inline-flex transition-transform duration-200"
+                                :class="collapsed ? 'rotate-180' : ''"
+                            >
+                                <x-filament::icon
+                                    icon="untitledui-chevron-left-double"
+                                    class="size-4"
+                                />
+                            </span>
                         </button>
                     </div>
 
